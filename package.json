@@ -1,0 +1,24 @@
+{
+	"name": "app-k",
+	"version": "1.0.0",
+	"description": "",
+	"private": true,
+	"workspaces": [
+		"apps/*"
+	],
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/SEA18-Team4/app-k.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"type": "commonjs",
+	"bugs": {
+		"url": "https://github.com/SEA18-Team4/app-k/issues"
+	},
+	"homepage": "https://github.com/SEA18-Team4/app-k#readme"
+}
