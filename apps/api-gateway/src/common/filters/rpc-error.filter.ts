@@ -15,6 +15,9 @@ type RpcErrorPayload = {
 //mapping error
 const errorStatusByCode: Record<string, HttpStatus> = {
   [AuthErrorCode.EMAIL_ALREADY_EXISTS]: HttpStatus.CONFLICT,
+  [AuthErrorCode.INVALID_CREDENTIALS]: HttpStatus.UNAUTHORIZED,
+  [AuthErrorCode.USER_INACTIVE]: HttpStatus.FORBIDDEN,
+  [AuthErrorCode.USER_NOT_FOUND]: HttpStatus.NOT_FOUND,
 };
 
 

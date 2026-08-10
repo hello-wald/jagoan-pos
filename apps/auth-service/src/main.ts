@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { ZodValidationPipe } from 'nestjs-zod';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
@@ -13,6 +14,7 @@ async function bootstrap() {
       },
     },
   );
+  app.useGlobalPipes(new ZodValidationPipe())
     
   await app.listen();
 }
