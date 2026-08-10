@@ -1,10 +1,10 @@
-import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { CurrentUser } from './decorator/current-user.decorator';
 import { JwtGuard } from './guards/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { LoginDto, RegisterOwnerDto } from './dto/auth.dto';
-import { type JwtPayload } from '@app-k/shared';
+import { type AuthUser } from '@app-k/shared';
 
 @Controller('auth')
 export class AuthController {
@@ -23,18 +23,9 @@ export class AuthController {
 
     @UseGuards(JwtGuard)
     @ApiBearerAuth()
-    @Post('logout')
-    logout(@CurrentUser() user:JwtPayload){
-        return this.authClient.send(`auth.logout`, user)
+    @Get('protected')
+    getProtected(@CurrentUser() user: AuthUser){
+        return user
     }
-
-    // @UseGuards(JwtGuard)
-    // @ApiBearerAuth()
-    // @Get('protected')
-    // getProtected(@CurrentUser() user: JwtPayload){
-    //     return {
-    //         message: "Guard Valid"
-    //     }
-    // }
 
 }

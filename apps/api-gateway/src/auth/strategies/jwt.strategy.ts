@@ -1,15 +1,16 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
-// import { lastValueFrom } from "rxjs";
-import {type JwtPayload} from "@app-k/shared"
+import { lastValueFrom } from "rxjs";
+import {type AuthUser, type JwtPayload} from "@app-k/shared"
+import { ClientProxy } from "@nestjs/microservices";
 
 
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy){
-    constructor(private readonly configService: ConfigService){
+    constructor(private readonly configService: ConfigService, @Inject('AUTH_SERVICE') private readonly authClient:ClientProxy){
         const jwtSecret = configService.get<string>('JWT_SECRET')
         if(!jwtSecret){
             throw new Error('JWT_SECRET is not configured')
@@ -21,14 +22,15 @@ export class JwtStrategy extends PassportStrategy(Strategy){
         });
     }
 
-    // ini sementara return jwtpayload dlu ya , nanti return user ny lgsg aja *tanpa pass dll
-    validate(payload: JwtPayload): JwtPayload{
-        // ini dilakuin nanti pas udah nyala auth service dan inject tokennya
-        // const user = await lastValueFrom(
-        //     this.authClient.send('auth.getUserById', {
-        //         userId: payload.sub
-        //     })
-        // ) 
-        return payload
+    async validate(payload: JwtPayload): Promise<AuthUser>{
+        const user = await lastValueFrom(
+            this.authClient.send<AuthUser, { userId: string }>(
+                'auth.getUserById',
+                {
+                    userId: payload.sub,
+                },
+            ),
+        );
+        return user
     }
 }
