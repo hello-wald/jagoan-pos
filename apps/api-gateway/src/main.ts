@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
+import { RpcErrorFilter } from './common/filters/rpc-error.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,6 +19,7 @@ async function bootstrap() {
       .build();
   
   app.useGlobalPipes(new ZodValidationPipe())
+  app.useGlobalFilters(new RpcErrorFilter())
   
   const document = SwaggerModule.createDocument(
     app,
