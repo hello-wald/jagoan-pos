@@ -5,6 +5,8 @@ import { JwtGuard } from './guards/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { LoginDto, RegisterOwnerDto } from './dto/auth.dto';
 import { type AuthUser } from '@app-k/shared';
+import { RolesGuard } from './guards/role.guard';
+import { Roles } from './decorator/role.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -12,7 +14,7 @@ export class AuthController {
 
     @Post('login')
     login(@Body() dto:LoginDto){
-        return this.authClient.send(`auth.login`, dto).pipe()
+        return this.authClient.send(`auth.login`, dto)
     }
 
     // auto jadi owner
@@ -26,6 +28,14 @@ export class AuthController {
     @Get('protected')
     getProtected(@CurrentUser() user: AuthUser){
         return user
+    }
+
+    @UseGuards(JwtGuard, RolesGuard)
+    @Get('protectedRoles')
+    @Roles('OWNER')
+    @ApiBearerAuth()
+    getProtectedRoles(@CurrentUser() user: AuthUser){
+        return user.role
     }
 
 }
