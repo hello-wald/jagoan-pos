@@ -32,7 +32,7 @@ export class AuthController {
 
     @UseGuards(JwtGuard, RolesGuard)
     @Get('protectedRoles')
-    @Roles('OWNER')
+    @Roles('GLOBAL_ADMIN')
     @ApiBearerAuth()
     getProtectedRoles(@CurrentUser() user: AuthUser){
         return user.role
