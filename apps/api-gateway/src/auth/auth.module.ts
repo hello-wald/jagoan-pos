@@ -9,17 +9,15 @@ import { RolesGuard } from './guards/role.guard';
   imports: [
     ClientsModule.registerAsync([
       {
-        name: 'AUTH_SERVICE',
+        name: 'CORE_SERVICE',
         imports: [ConfigModule],
         inject: [ConfigService],
         useFactory: (config: ConfigService) => {
-          console.log(config.get<string>('AUTH_HOST'))
-          console.log(config.get<string>('AUTH_TCP_PORT'))
           return {
             transport: Transport.TCP,
             options: {
-              host: config.get<string>('AUTH_HOST'),
-              port: Number(config.get<string>('AUTH_TCP_PORT'))
+              host: config.get<string>('CORE_HOST'),
+              port: Number(config.get<string>('CORE_TCP_PORT'))
             }
           }
         }

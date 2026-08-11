@@ -13,8 +13,8 @@ import * as Joi from 'joi';
       envFilePath: [resolve(process.cwd(),'../../.env')],
       validationSchema: Joi.object({
         GATEWAY_PORT: Joi.number().integer().min(1).max(65535).default(3000), 
-        AUTH_HOST: Joi.string().default('localhost'),
-        AUTH_TCP_PORT: Joi.number().integer().min(1).max(65535).default(4001),
+        CORE_HOST: Joi.string().default('localhost'),
+        CORE_TCP_PORT: Joi.number().integer().min(1).max(65535).default(4001),
         JWT_SECRET: Joi.string().min(16).required()
       })
     }),
