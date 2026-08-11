@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { resolve } from 'node:path';
 import { AuthModule } from './auth/auth.module';
+import { StaffModule } from './staff/staff.module';
 import * as Joi from 'joi';
 
 @Module({
@@ -18,7 +19,8 @@ import * as Joi from 'joi';
         JWT_SECRET: Joi.string().min(16).required()
       })
     }),
-    AuthModule
+    AuthModule,
+    StaffModule
   ],
   controllers: [AppController],
   providers: [AppService],
