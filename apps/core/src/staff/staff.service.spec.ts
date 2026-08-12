@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StaffService } from './staff.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
+import { RedisService } from '@app-k/redis';
 import { Role } from 'generated/prisma/enums';
 import { Prisma } from 'generated/prisma/client';
 import { RpcException } from '@nestjs/microservices';

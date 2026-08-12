@@ -6,7 +6,7 @@ import { RpcException } from '@nestjs/microservices';
 import { AuthErrorCode, redisKeys, StaffErrorCode } from '@app-k/shared';
 import * as argon2 from 'argon2';
 import { Prisma } from 'generated/prisma/client';
-import { RedisService } from 'src/redis/redis.service';
+import { RedisService } from '@app-k/redis';
 
 @Injectable()
 export class StaffService {

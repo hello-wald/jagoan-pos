@@ -2,8 +2,7 @@ import { Controller, UseInterceptors } from '@nestjs/common';
 import { StaffService } from './staff.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CreateCashierDto, SetCashierActiveDto } from './dto/staff.dto';
-import { RedisCacheInterceptor } from 'src/redis/interceptors/redis-cache.interceptor';
-import { Cacheable } from 'src/redis/decorator/cacheable.decorator';
+import { RedisCacheInterceptor, Cacheable } from '@app-k/redis';
 import { redisKeys } from '@app-k/shared';
 
 @Controller()
