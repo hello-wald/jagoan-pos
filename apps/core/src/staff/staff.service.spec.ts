@@ -1,10 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StaffService } from './staff.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { RedisService } from 'src/redis/redis.service';
 import { Role } from 'generated/prisma/enums';
 import { Prisma } from 'generated/prisma/client';
 import { RpcException } from '@nestjs/microservices';
-import { AuthErrorCode, StaffErrorCode } from '@app-k/shared';
+import { AuthErrorCode, redisKeys, StaffErrorCode } from '@app-k/shared';
 import * as argon2 from 'argon2';
 
 jest.mock('argon2', () => ({
@@ -20,9 +21,14 @@ type MockPrismaService = {
   };
 };
 
+type MockRedisService = {
+  get: jest.Mock;
+  set: jest.Mock;
+  del: jest.Mock;
+};
+
 describe('StaffService', () => {
   let service: StaffService;
-  let prismaService: MockPrismaService;
 
   const mockPrismaService: MockPrismaService = {
     user: {
@@ -31,6 +37,12 @@ describe('StaffService', () => {
       updateMany: jest.fn(),
       findUnique: jest.fn(),
     },
+  };
+
+  const mockRedisService: MockRedisService = {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -43,11 +55,14 @@ describe('StaffService', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
+        },
       ],
     }).compile();
 
     service = module.get<StaffService>(StaffService);
-    prismaService = module.get<MockPrismaService>(PrismaService);
   });
 
   it('should be defined', () => {
@@ -80,12 +95,19 @@ describe('StaffService', () => {
           role: Role.CASHIER,
           merchantId,
         },
-        select: expect.any(Object),
+        select: expect.any(Object) as Prisma.UserSelect,
         orderBy: {
           createdAt: 'desc',
         },
       });
-      expect(result).toEqual(mockCashiers);
+      expect(result).toEqual({
+        data: mockCashiers,
+        summary: {
+          total: 1,
+          active: 1,
+          inactive: 0,
+        },
+      });
     });
 
     it('should return an empty array if merchant has no cashiers', async () => {
@@ -93,7 +115,14 @@ describe('StaffService', () => {
 
       const result = await service.getCashiers(merchantId);
 
-      expect(result).toEqual([]);
+      expect(result).toEqual({
+        data: [],
+        summary: {
+          total: 0,
+          active: 0,
+          inactive: 0,
+        },
+      });
       expect(mockPrismaService.user.findMany).toHaveBeenCalledTimes(1);
     });
   });
@@ -107,7 +136,7 @@ describe('StaffService', () => {
     };
     const hashedPassword = 'argon2_hashed_password';
 
-    it('should normalize email, hash password, and create cashier successfully', async () => {
+    it('should normalize email, hash password, create cashier, and invalidate cache successfully', async () => {
       (argon2.hash as jest.Mock).mockResolvedValue(hashedPassword);
 
       const createdCashier = {
@@ -135,12 +164,15 @@ describe('StaffService', () => {
           role: Role.CASHIER,
           isActive: true,
         },
-        select: expect.any(Object),
+        select: expect.any(Object) as Prisma.UserSelect,
       });
+      expect(mockRedisService.del).toHaveBeenCalledWith(
+        redisKeys.core.cashiers(merchantId),
+      );
       expect(result).toEqual(createdCashier);
     });
 
-    it('should throw RpcException with EMAIL_ALREADY_EXISTS when Prisma throws P2002 error', async () => {
+    it('should throw RpcException with EMAIL_ALREADY_EXISTS and not invalidate cache when Prisma throws P2002 error', async () => {
       (argon2.hash as jest.Mock).mockResolvedValue(hashedPassword);
 
       const prismaP2002Error = new Prisma.PrismaClientKnownRequestError(
@@ -161,15 +193,18 @@ describe('StaffService', () => {
         await service.createCashier(merchantId, dto);
       } catch (error: unknown) {
         expect(error).toBeInstanceOf(RpcException);
-        const rpcError = error as RpcException;
-        expect(rpcError.getError()).toEqual({
-          code: AuthErrorCode.EMAIL_ALREADY_EXISTS,
-          message: 'Email already registered',
-        });
+        if (error instanceof RpcException) {
+          expect(error.getError()).toEqual({
+            code: AuthErrorCode.EMAIL_ALREADY_EXISTS,
+            message: 'Email already registered',
+          });
+        }
       }
+
+      expect(mockRedisService.del).not.toHaveBeenCalled();
     });
 
-    it('should rethrow unexpected errors directly', async () => {
+    it('should rethrow unexpected errors directly and not invalidate cache', async () => {
       (argon2.hash as jest.Mock).mockResolvedValue(hashedPassword);
 
       const unexpectedError = new Error('Database connection failed');
@@ -178,6 +213,7 @@ describe('StaffService', () => {
       await expect(service.createCashier(merchantId, dto)).rejects.toThrow(
         'Database connection failed',
       );
+      expect(mockRedisService.del).not.toHaveBeenCalled();
     });
   });
 
@@ -186,7 +222,7 @@ describe('StaffService', () => {
     const cashierId = 'cashier-456';
     const dto = { isActive: false };
 
-    it('should update status and return updated cashier data', async () => {
+    it('should update status, invalidate cache, and return updated cashier data', async () => {
       mockPrismaService.user.updateMany.mockResolvedValue({ count: 1 });
 
       const updatedCashier = {
@@ -214,14 +250,17 @@ describe('StaffService', () => {
           isActive: false,
         },
       });
+      expect(mockRedisService.del).toHaveBeenCalledWith(
+        redisKeys.core.cashiers(merchantId),
+      );
       expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
         where: { id: cashierId },
-        select: expect.any(Object),
+        select: expect.any(Object) as Prisma.UserSelect,
       });
       expect(result).toEqual(updatedCashier);
     });
 
-    it('should throw RpcException with CASHIER_NOT_FOUND when updateMany count is 0', async () => {
+    it('should throw RpcException with CASHIER_NOT_FOUND and not invalidate cache when updateMany count is 0', async () => {
       mockPrismaService.user.updateMany.mockResolvedValue({ count: 0 });
 
       await expect(
@@ -232,13 +271,15 @@ describe('StaffService', () => {
         await service.setCashierActive(merchantId, cashierId, dto);
       } catch (error: unknown) {
         expect(error).toBeInstanceOf(RpcException);
-        const rpcError = error as RpcException;
-        expect(rpcError.getError()).toEqual({
-          code: StaffErrorCode.CASHIER_NOT_FOUND,
-          message: 'Cashier not found',
-        });
+        if (error instanceof RpcException) {
+          expect(error.getError()).toEqual({
+            code: StaffErrorCode.CASHIER_NOT_FOUND,
+            message: 'Cashier not found',
+          });
+        }
       }
 
+      expect(mockRedisService.del).not.toHaveBeenCalled();
       expect(mockPrismaService.user.findUnique).not.toHaveBeenCalled();
     });
   });

@@ -1,13 +1,25 @@
-import { Controller } from '@nestjs/common';
+import { Controller, UseInterceptors } from '@nestjs/common';
 import { StaffService } from './staff.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CreateCashierDto, SetCashierActiveDto } from './dto/staff.dto';
+import { RedisCacheInterceptor } from 'src/redis/interceptors/redis-cache.interceptor';
+import { Cacheable } from 'src/redis/decorator/cacheable.decorator';
+import { redisKeys } from '@app-k/shared';
 
 @Controller()
 export class StaffController {
     constructor(private readonly staffService:StaffService){ }
 
     @MessagePattern('staff.getCashiers')
+    @UseInterceptors(RedisCacheInterceptor)
+    @Cacheable({
+        key: (ctx) => {
+            const data = ctx.switchToRpc().getData<{merchantId: string}>()
+            const merchantId = typeof data === 'string' ? data: data?.merchantId
+            return merchantId ? redisKeys.core.cashiers(merchantId): null
+        },
+        ttlSeconds: 300
+    })
     getCashiers(@Payload('merchantId') merchantId: string) {
         return this.staffService.getCashiers(merchantId);
     }
