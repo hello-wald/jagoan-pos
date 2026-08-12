@@ -5,19 +5,21 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { AuthErrorCode } from '@app-k/shared';
+import { AuthErrorCode, StaffErrorCode } from '@app-k/shared';
 
 type RpcErrorPayload = {
   code?: string;
   message?: string;
 };
 
-//mapping error
+//mapping error , nanti kalo mulai banyak yang mappping nya sama 
+// , bisa pake set di kelommpokin , skrg gausah dlu.
 const errorStatusByCode: Record<string, HttpStatus> = {
   [AuthErrorCode.EMAIL_ALREADY_EXISTS]: HttpStatus.CONFLICT,
   [AuthErrorCode.INVALID_CREDENTIALS]: HttpStatus.UNAUTHORIZED,
   [AuthErrorCode.USER_INACTIVE]: HttpStatus.FORBIDDEN,
   [AuthErrorCode.USER_NOT_FOUND]: HttpStatus.NOT_FOUND,
+  [StaffErrorCode.CASHIER_NOT_FOUND]: HttpStatus.NOT_FOUND
 };
 
 

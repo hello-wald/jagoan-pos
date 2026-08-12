@@ -10,7 +10,7 @@ import { ClientProxy } from "@nestjs/microservices";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy){
-    constructor(private readonly configService: ConfigService, @Inject('AUTH_SERVICE') private readonly authClient:ClientProxy){
+    constructor(private readonly configService: ConfigService, @Inject('CORE_SERVICE') private readonly authClient:ClientProxy){
         const jwtSecret = configService.get<string>('JWT_SECRET')
         if(!jwtSecret){
             throw new Error('JWT_SECRET is not configured')

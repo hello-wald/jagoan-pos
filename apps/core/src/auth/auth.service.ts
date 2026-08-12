@@ -6,6 +6,7 @@ import { Role } from 'generated/prisma/enums';
 import { RpcException } from '@nestjs/microservices';
 import { AuthErrorCode } from '@app-k/shared';
 import { JwtService } from '@nestjs/jwt';
+import { Prisma } from 'generated/prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -13,29 +14,15 @@ export class AuthService {
 
     async registerOwner(dto:RegisterOwnerDto){
         const email = dto.email.trim().toLowerCase()
-        const existingUser = await this.prisma.user.findUnique({
-            where:{
-                email
-            }
-        })
-
-        if (existingUser){
-            throw new RpcException({
-                code: AuthErrorCode.EMAIL_ALREADY_EXISTS,
-                message: 'Email already registered'
-            })
-        }
-        
         const passwordHash = await argon2.hash(dto.password)
-
-        const user = await this.prisma.$transaction(async (tx) => {
-            const merchant = await tx.merchant.create({
-                data: {
-                    name: dto.merchantName
-                }
-            })
-
-            return tx.user.create({
+        try {
+            return await this.prisma.$transaction(async(tx) => {
+                const merchant = await tx.merchant.create({
+                    data: {
+                        name: dto.merchantName
+                    }
+                })
+                return tx.user.create({
                 data: {
                     fullName: dto.fullName,
                     email,
@@ -54,16 +41,23 @@ export class AuthService {
                     updatedAt: true,
                 }
             })
-        })
-        return user
+            })
+        } catch (error) {
+            if(error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002'){
+                throw new RpcException({
+                    code: AuthErrorCode.EMAIL_ALREADY_EXISTS,
+                    message: 'Email already registered'
+                })
+            }
+            throw error
+        }
     }
 
 
     async login(dto:LoginDto){
+        const email = dto.email.trim().toLowerCase()
         const userExist = await this.prisma.user.findUnique({
-            where: {
-                email: dto.email
-            }
+            where: {email}
         })
         if (!userExist){
             throw new RpcException({

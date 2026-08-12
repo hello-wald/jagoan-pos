@@ -9,8 +9,8 @@ async function bootstrap() {
     {
       transport: Transport.TCP,
       options: {
-        host: process.env.AUTH_HOST,
-        port: Number(process.env.AUTH_TCP_PORT),
+        host: process.env.CORE_HOST,
+        port: Number(process.env.CORE_TCP_PORT),
       },
     },
   );

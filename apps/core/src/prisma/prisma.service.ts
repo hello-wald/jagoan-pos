@@ -7,7 +7,7 @@ import { PrismaClient } from 'generated/prisma/client';
 export class PrismaService extends PrismaClient implements OnModuleDestroy, OnModuleInit{
     private logger = new Logger(PrismaService.name)
     constructor(private readonly configService:ConfigService){
-        const adapter = new PrismaPg({ connectionString: configService.get<string>('AUTH_DATABASE_URL') })
+        const adapter = new PrismaPg({ connectionString: configService.get<string>('CORE_DATABASE_URL') })
         super({adapter})
     }
 

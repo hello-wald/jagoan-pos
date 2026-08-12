@@ -10,7 +10,7 @@ import { Roles } from './decorator/role.decorator';
 
 @Controller('auth')
 export class AuthController {
-    constructor(@Inject('AUTH_SERVICE') private readonly authClient: ClientProxy){}
+    constructor(@Inject('CORE_SERVICE') private readonly authClient: ClientProxy){}
 
     @Post('login')
     login(@Body() dto:LoginDto){
@@ -32,7 +32,7 @@ export class AuthController {
 
     @UseGuards(JwtGuard, RolesGuard)
     @Get('protectedRoles')
-    @Roles('OWNER')
+    @Roles('GLOBAL_ADMIN')
     @ApiBearerAuth()
     getProtectedRoles(@CurrentUser() user: AuthUser){
         return user.role

@@ -16,15 +16,6 @@ export const loginSchema = z.object({
     password: passwordSchema,
 });
 
-export const createCashierSchema = z.object({
-    fullName: nameSchema,
-    email: emailSchema,
-    password: passwordSchema,
-});
-
-export const setCashierActiveSchema = z.object({
-    isActive: z.boolean(),
-});
 
 // jwt payload and role 
 export const userRoleSchema = z.enum([
