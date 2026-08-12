@@ -3,13 +3,17 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCashierDto, SetCashierActiveDto } from './dto/staff.dto';
 import { Role } from 'generated/prisma/enums';
 import { RpcException } from '@nestjs/microservices';
-import { AuthErrorCode, StaffErrorCode } from '@app-k/shared';
+import { AuthErrorCode, redisKeys, StaffErrorCode } from '@app-k/shared';
 import * as argon2 from 'argon2';
 import { Prisma } from 'generated/prisma/client';
+import { RedisService } from 'src/redis/redis.service';
 
 @Injectable()
 export class StaffService {
-    constructor(private readonly prisma: PrismaService){}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly redis: RedisService
+    ){}
 
     private readonly cashierSelect = {
         id: true,
@@ -23,16 +27,33 @@ export class StaffService {
     } as const;
 
     async getCashiers(merchantId:string){
-        return this.prisma.user.findMany({
+        const data = await this.prisma.user.findMany({
             where: {
                 role: Role.CASHIER,
-                merchantId, 
+                merchantId
             },
             select: this.cashierSelect,
             orderBy: {
                 createdAt: 'desc'
             }
         })
+
+        const total = data.length 
+        let active = 0
+
+        for (const cashier of data){
+            if(cashier.isActive) active++
+        }
+        const summary = {
+            total, 
+            active,
+            inactive: total - active,
+        }
+
+        return {
+            data,
+            summary
+        }
     }
 
     // database unique index email race condition 
@@ -40,7 +61,7 @@ export class StaffService {
         const email = dto.email.trim().toLowerCase()
         const passwordHash = await argon2.hash(dto.password)
         try {
-            return await this.prisma.user.create({
+            const newCashier = await this.prisma.user.create({
                 data: {
                     merchantId,
                     fullName: dto.fullName,
@@ -51,6 +72,10 @@ export class StaffService {
                 },
                 select: this.cashierSelect
             })
+
+            await this.redis.del(redisKeys.core.cashiers(merchantId))
+
+            return newCashier
         } catch (error) {
             if(
                 error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -84,12 +109,15 @@ export class StaffService {
             })
         }
 
+        await this.redis.del(redisKeys.core.cashiers(merchantId))
+
         return this.prisma.user.findUnique({
             where: {
                 id: cashierId
             },
             select: this.cashierSelect
         })
-
     }
+
+
 }
