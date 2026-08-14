@@ -1,21 +1,21 @@
 {
 	"name": "app-k",
 	"version": "1.0.0",
-	"description": "",
+	"description": "POS Application",
 	"private": true,
 	"workspaces": [
 		"apps/*",
 		"packages/*"
 	],
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"dev": "npm run dev --workspaces --if-present",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"build": "npm run build --workspaces --if-present"
 	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/SEA18-Team4/app-k.git"
 	},
-	"keywords": [],
-	"author": "",
 	"license": "ISC",
 	"type": "commonjs",
 	"bugs": {

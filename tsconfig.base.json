@@ -1,0 +1,29 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"lib": ["ES2022"],
+		"module": "commonjs",
+		"moduleResolution": "node",
+
+		"strict": true,
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+
+		"declaration": true,
+		"sourceMap": true,
+		"incremental": true,
+
+		"baseUrl": ".",
+		"paths": {
+			"@/contracts": ["packages/contracts/src"],
+			"@/shared": ["packages/shared/src"],
+			"@/auth": ["packages/auth/src"]
+		}
+	},
+	"exclude": ["node_modules", "dist"]
+}
