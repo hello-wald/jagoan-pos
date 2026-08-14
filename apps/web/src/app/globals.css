@@ -1,0 +1,324 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 248 250 252;
+    --foreground: 15 23 42;
+  }
+
+  body {
+    background-color: #F8FAFC;
+    color: #0F172A;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Landing hero motion system */
+.hero-grid-pattern {
+  background-image:
+    linear-gradient(rgba(99, 102, 241, 0.065) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.065) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(to right, transparent 2%, black 48%, black 100%);
+}
+
+@keyframes heroRise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes heroPreviewEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(28px, 30px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes heroDashboardFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes heroFloatLeft {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-1deg);
+  }
+  50% {
+    transform: translate3d(5px, -12px, 0) rotate(1deg);
+  }
+}
+
+@keyframes heroFloatRight {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(1deg);
+  }
+  50% {
+    transform: translate3d(-5px, -10px, 0) rotate(-1deg);
+  }
+}
+
+@keyframes heroBotBreathe {
+  0%,
+  100% {
+    opacity: 0.82;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes heroOrbOne {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(38px, 24px, 0) scale(1.13);
+  }
+}
+
+@keyframes heroOrbTwo {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-34px, -22px, 0) scale(1.1);
+  }
+}
+
+@keyframes heroPing {
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+
+@keyframes heroPulseDot {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes heroTicker {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes heroBarGrow {
+  from {
+    opacity: 0.25;
+    transform: scaleY(0.08);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes heroSheen {
+  0%,
+  18% {
+    transform: translate3d(-180%, 0, 0) rotate(12deg);
+  }
+  55%,
+  100% {
+    transform: translate3d(520%, 0, 0) rotate(12deg);
+  }
+}
+
+@keyframes heroUnderline {
+  from {
+    stroke-dashoffset: 340;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.hero-enter {
+  opacity: 0;
+  animation: heroRise 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.hero-enter-1 {
+  animation-delay: 80ms;
+}
+
+.hero-enter-2 {
+  animation-delay: 170ms;
+}
+
+.hero-enter-3 {
+  animation-delay: 280ms;
+}
+
+.hero-enter-4 {
+  animation-delay: 390ms;
+}
+
+.hero-enter-5 {
+  animation-delay: 500ms;
+}
+
+.hero-preview-enter {
+  opacity: 0;
+  animation: heroPreviewEnter 0.95s 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.hero-dashboard-float {
+  animation: heroDashboardFloat 7s 1.3s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-float-card-left {
+  animation: heroFloatLeft 5.8s 1s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-float-card-right {
+  animation: heroFloatRight 6.4s 1.35s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-orb-one {
+  animation: heroOrbOne 14s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-orb-two {
+  animation: heroOrbTwo 16s -4s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-ping {
+  animation: heroPing 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.hero-pulse-dot {
+  animation: heroPulseDot 2s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+.hero-chart-bar {
+  animation: heroBarGrow 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-bot-breathe {
+  animation: heroBotBreathe 3.6s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+.hero-ticker-viewport {
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+.hero-ticker-track {
+  animation: heroTicker 13s linear infinite;
+  will-change: transform;
+}
+
+.hero-sheen {
+  animation: heroSheen 5.5s 1.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-underline path {
+  stroke-dasharray: 340;
+  stroke-dashoffset: 340;
+  animation: heroUnderline 1s 720ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-motion,
+  .hero-motion::before,
+  .hero-motion::after,
+  .hero-motion * {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .hero-enter,
+  .hero-preview-enter {
+    opacity: 1;
+    transform: none;
+  }
+}
