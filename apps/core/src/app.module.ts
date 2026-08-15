@@ -13,10 +13,11 @@ import { StaffModule } from './staff/staff.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      // Resolved from __dirname, not process.cwd(). Under Docker the working
-      // directory is /app while this file lives in /app/apps/core/dist, so a
-      // cwd-relative path resolved to /.env and silently loaded nothing.
-      envFilePath: [resolve(__dirname, '..', '.env')],
+      // Resolved from __dirname, not process.cwd(). One shared .env lives at
+      // the repo root (not per-service) so JWT_SECRET/REDIS_URL can't drift
+      // between services; this file compiles to apps/core/dist/app.module.js,
+      // so three levels up is the repo root.
+      envFilePath: [resolve(__dirname, '..', '..', '..', '.env')],
       ignoreEnvFile: process.env.NODE_ENV === 'production',
       validate: validateEnv(coreEnvSchema),
     }),
