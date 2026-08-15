@@ -3,10 +3,10 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCashierDto, SetCashierActiveDto } from './dto/staff.dto';
 import { Role } from 'generated/prisma/enums';
 import { RpcException } from '@nestjs/microservices';
-import { AuthErrorCode, redisKeys, StaffErrorCode } from '@app-k/shared';
+import { AuthErrorCode, redisKeys, StaffErrorCode } from '@jagoan-pos/shared';
 import * as argon2 from 'argon2';
 import { Prisma } from 'generated/prisma/client';
-import { RedisService } from '@app-k/redis';
+import { RedisService } from '@jagoan-pos/redis';
 
 @Injectable()
 export class StaffService {

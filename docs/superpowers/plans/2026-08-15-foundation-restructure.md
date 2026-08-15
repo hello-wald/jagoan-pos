@@ -19,8 +19,8 @@ Every task's requirements implicitly include this section.
 - **Node** `>=22.0.0`. **npm** workspaces (no pnpm/yarn). Lockfile is `package-lock.json`.
 - **TypeScript** `^5.7.3`, `module`/`moduleResolution`: `commonjs`/`node`, `target` `ES2023`, `strict: true`. No `any` without an inline `// eslint-disable-next-line` and a reason.
 - **NestJS** `^11`. **Prisma** `^7.9.1`. **Zod** `^4.4.3`. **ioredis** `^5.4.1`. **argon2** `^0.45.1`.
-- **Package scope is `@app-k/*`** — matches the `SEA18-Team4/app-k` git remote. Do not rename to `@jagoan/*` in this plan.
-- **Workspace name === directory name.** `apps/core` → `@app-k/core`. `apps/products` → `@app-k/products`. No `-service` suffix anywhere.
+- **Package scope is `@jagoan-pos/*`** — matches the `jagoan-pos` repository.
+- **Workspace name === directory name.** `apps/core` → `@jagoan-pos/core`. `apps/products` → `@jagoan-pos/products`. No `-service` suffix anywhere.
 - **Validation is Zod only.** Joi must not appear in any `package.json` after Task 1.
 - **Message patterns** are `<service>.<module>.<action>`, e.g. `core.auth.login`. Declared only in `packages/contracts`.
 - **Every RPC payload is `RpcEnvelope<T>`.** No bare payloads, no ad-hoc `{ merchantId, dto }` shapes.
@@ -238,14 +238,14 @@ rm -f apps/*/eslint.config.mjs apps/*/.prettierrc apps/*/.gitignore
 
 ```json
 {
-  "name": "app-k",
+  "name": "jagoan-pos",
   "version": "1.0.0",
   "private": true,
   "license": "UNLICENSED",
   "engines": { "node": ">=22.0.0" },
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "build:packages": "npm run build --workspace=@app-k/contracts --workspace=@app-k/shared --workspace=@app-k/redis",
+    "build:packages": "npm run build --workspace=@jagoan-pos/contracts --workspace=@jagoan-pos/shared --workspace=@jagoan-pos/redis",
     "build": "npm run build:packages && npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
@@ -364,7 +364,7 @@ describe('loginSchema', () => {
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `npm test --workspace=@app-k/contracts`
+Run: `npm test --workspace=@jagoan-pos/contracts`
 Expected: FAIL — the workspace does not exist yet (`npm ERR! No workspaces found`).
 
 - [ ] **Step 3: Create the package manifest**
@@ -373,7 +373,7 @@ Expected: FAIL — the workspace does not exist yet (`npm ERR! No workspaces fou
 
 ```json
 {
-  "name": "@app-k/contracts",
+  "name": "@jagoan-pos/contracts",
   "version": "0.0.1",
   "private": true,
   "main": "./dist/cjs/index.js",
@@ -562,7 +562,7 @@ export type LoginResult = {
 
 - [ ] **Step 7: Run the test to verify it passes**
 
-Run: `npm install && npm test --workspace=@app-k/contracts`
+Run: `npm install && npm test --workspace=@jagoan-pos/contracts`
 Expected: PASS, 5 tests.
 
 If `z.email` is not exported by the installed Zod, substitute `z.string().email('Invalid email address')` for the piped form and re-run — the tests are the arbiter.
@@ -660,7 +660,7 @@ export * from './core/core.contract';
 - [ ] **Step 11: Verify the package builds and tests pass**
 
 ```bash
-npm run build --workspace=@app-k/contracts && npm test --workspace=@app-k/contracts
+npm run build --workspace=@jagoan-pos/contracts && npm test --workspace=@jagoan-pos/contracts
 ls packages/contracts/dist/cjs/index.js packages/contracts/dist/esm/index.js packages/contracts/dist/esm/package.json
 ```
 Expected: 5 tests pass; all three files listed.
@@ -711,7 +711,7 @@ git commit -m "feat(contracts): add rpc envelope, error codes, and typed core co
 The auth/staff schemas and error codes move to `contracts` (Task 2). What remains in `shared` is mechanism, not wire format — which is the rule that keeps it from becoming a junk drawer.
 
 **Interfaces:**
-- Consumes: nothing. **Must not import `@app-k/contracts`.**
+- Consumes: nothing. **Must not import `@jagoan-pos/contracts`.**
 - Produces:
   - `validateEnv<T extends ZodType>(schema: T): (raw: Record<string, unknown>) => z.infer<T>`
   - `buildLoggerOptions(serviceName: string): Params` for `nestjs-pino`
@@ -749,7 +749,7 @@ describe('validateEnv', () => {
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `npm test --workspace=@app-k/shared`
+Run: `npm test --workspace=@jagoan-pos/shared`
 Expected: FAIL — `Cannot find module './validate-env'`.
 
 - [ ] **Step 3: Write `src/config/validate-env.ts`**
@@ -777,7 +777,7 @@ export function validateEnv<T extends ZodType>(schema: T) {
 
 - [ ] **Step 4: Run the test to verify it passes**
 
-Run: `npm test --workspace=@app-k/shared`
+Run: `npm test --workspace=@jagoan-pos/shared`
 Expected: PASS, 3 tests.
 
 - [ ] **Step 5: Write `src/logger/logger.config.ts`**
@@ -852,7 +852,7 @@ rm -rf packages/shared/src/auth packages/shared/src/staff packages/shared/src/ca
 
 ```json
 {
-  "name": "@app-k/shared",
+  "name": "@jagoan-pos/shared",
   "version": "0.0.1",
   "private": true,
   "main": "./dist/index.js",
@@ -898,13 +898,13 @@ rm -rf packages/shared/src/auth packages/shared/src/staff packages/shared/src/ca
 - [ ] **Step 9: Verify build and tests**
 
 ```bash
-npm install && npm run build --workspace=@app-k/shared && npm test --workspace=@app-k/shared
+npm install && npm run build --workspace=@jagoan-pos/shared && npm test --workspace=@jagoan-pos/shared
 ```
 Expected: build emits `dist/`; 3 tests pass.
 
 - [ ] **Step 10: Verify the layering rule holds**
 
-Run: `grep -rn "@app-k/contracts" packages/shared/src; echo "exit=$?"`
+Run: `grep -rn "@jagoan-pos/contracts" packages/shared/src; echo "exit=$?"`
 Expected: no output, `exit=1`. `shared` must never import `contracts`.
 
 - [ ] **Step 11: Commit**
@@ -1004,7 +1004,7 @@ describe('RedisService', () => {
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `npm test --workspace=@app-k/redis`
+Run: `npm test --workspace=@jagoan-pos/redis`
 Expected: FAIL — `REDIS_CLIENT` is not exported and `incrWithTtl` does not exist.
 
 - [ ] **Step 3: Rewrite `src/redis.service.ts`**
@@ -1120,7 +1120,7 @@ The per-operation `op` label fixes the copy-paste bug where `set` and `del` fail
 
 - [ ] **Step 4: Run the test to verify it passes**
 
-Run: `npm test --workspace=@app-k/redis`
+Run: `npm test --workspace=@jagoan-pos/redis`
 Expected: PASS, 5 tests.
 
 - [ ] **Step 5: Rewrite `src/redis.module.ts`**
@@ -1216,7 +1216,7 @@ Replace the `@upstash/redis` dependency with `ioredis`:
 
 ```json
 {
-  "name": "@app-k/redis",
+  "name": "@jagoan-pos/redis",
   "version": "0.0.1",
   "private": true,
   "main": "./dist/index.js",
@@ -1282,7 +1282,7 @@ Expected: only hits inside `apps/core/src/app.module.ts` (removed in Task 6). On
 - [ ] **Step 9: Verify build and full package test suite**
 
 ```bash
-npm run build:packages && npm test --workspace=@app-k/redis
+npm run build:packages && npm test --workspace=@jagoan-pos/redis
 ```
 Expected: three packages build; 6 tests pass (5 service + 1 existing interceptor spec).
 
@@ -1451,7 +1451,7 @@ This task establishes the template that Tasks 10 and 13 replicate. It removes th
 - Test: `apps/core/src/config/env.schema.spec.ts`
 
 **Interfaces:**
-- Consumes: `validateEnv`, `buildLoggerOptions` from `@app-k/shared`; `RedisModule` from `@app-k/redis`.
+- Consumes: `validateEnv`, `buildLoggerOptions` from `@jagoan-pos/shared`; `RedisModule` from `@jagoan-pos/redis`.
 - Produces: `coreEnvSchema`, `type CoreEnv`. `PrismaService` with `$on('query')` logging and an explicit pool ceiling. A `main.ts` that boots a TCP listener and closes cleanly on `SIGTERM`.
 
 - [ ] **Step 1: Write the failing test**
@@ -1497,7 +1497,7 @@ describe('coreEnvSchema', () => {
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `npm test --workspace=@app-k/core`
+Run: `npm test --workspace=@jagoan-pos/core`
 Expected: FAIL — the workspace is still named `core-service` (`No workspaces found`).
 
 - [ ] **Step 3: Write `src/config/env.schema.ts`**
@@ -1535,7 +1535,7 @@ export type CoreEnv = z.infer<typeof coreEnvSchema>;
 
 ```json
 {
-  "name": "@app-k/core",
+  "name": "@jagoan-pos/core",
   "version": "0.0.1",
   "private": true,
   "license": "UNLICENSED",
@@ -1552,9 +1552,9 @@ export type CoreEnv = z.infer<typeof coreEnvSchema>;
     "prisma:deploy": "prisma migrate deploy"
   },
   "dependencies": {
-    "@app-k/contracts": "^0.0.1",
-    "@app-k/redis": "^0.0.1",
-    "@app-k/shared": "^0.0.1",
+    "@jagoan-pos/contracts": "^0.0.1",
+    "@jagoan-pos/redis": "^0.0.1",
+    "@jagoan-pos/shared": "^0.0.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
@@ -1607,7 +1607,7 @@ Note the removed `"^src/(.*)$"` mapping. Relative imports only from here on; Tas
 - [ ] **Step 5: Run the test to verify it passes**
 
 ```bash
-npm install && npm test --workspace=@app-k/core -- env.schema
+npm install && npm test --workspace=@jagoan-pos/core -- env.schema
 ```
 Expected: PASS, 4 tests.
 
@@ -1640,8 +1640,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { resolve } from 'node:path';
-import { buildLoggerOptions, validateEnv } from '@app-k/shared';
-import { RedisModule } from '@app-k/redis';
+import { buildLoggerOptions, validateEnv } from '@jagoan-pos/shared';
+import { RedisModule } from '@jagoan-pos/redis';
 import { coreEnvSchema } from './config/env.schema';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
@@ -1776,7 +1776,7 @@ export default defineConfig({
 Add `dotenv` back as a devDependency only — it is a migration-time tool, not a runtime one:
 
 ```bash
-npm install --save-dev dotenv --workspace=@app-k/core
+npm install --save-dev dotenv --workspace=@jagoan-pos/core
 ```
 
 - [ ] **Step 11: Create `apps/core/.env.example`**
@@ -1812,8 +1812,8 @@ Expected: no output, `exit=1`. (`staff.service.ts` currently has one; fix it to 
 
 ```bash
 cp apps/core/.env.example apps/core/.env
-npm run prisma:generate --workspace=@app-k/core
-npm run typecheck --workspace=@app-k/core
+npm run prisma:generate --workspace=@jagoan-pos/core
+npm run typecheck --workspace=@jagoan-pos/core
 ```
 Expected: clean. Turning on `strict` will surface errors in `auth.service.ts` and `staff.service.ts` where `noImplicitAny: false` was hiding untyped parameters — fix each by adding the real type, never by widening to `any`.
 
@@ -1840,7 +1840,7 @@ The durable tier is not optional. If revocation lived only in Redis, an evicted 
 - Test: `apps/core/src/sessions/session.service.spec.ts`
 
 **Interfaces:**
-- Consumes: `PrismaService`, `RedisService`, `JwtService`, `ConfigService<CoreEnv>`, `cacheKeys` from `@app-k/shared`, `AuthUser` from `@app-k/contracts`.
+- Consumes: `PrismaService`, `RedisService`, `JwtService`, `ConfigService<CoreEnv>`, `cacheKeys` from `@jagoan-pos/shared`, `AuthUser` from `@jagoan-pos/contracts`.
 - Produces: `SessionService` with:
   - `issue(user: AuthUser): Promise<{ accessToken: string; jti: string }>`
   - `resolve(jti: string, userId: string): Promise<AuthUser>` — throws `RpcException({ code: SESSION_REVOKED | USER_NOT_FOUND | USER_INACTIVE })`
@@ -1869,7 +1869,7 @@ model RevokedToken {
 - [ ] **Step 2: Generate and apply the migration**
 
 ```bash
-npm run prisma:migrate --workspace=@app-k/core -- --name add_revoked_tokens
+npm run prisma:migrate --workspace=@jagoan-pos/core -- --name add_revoked_tokens
 ```
 Expected: a new folder under `prisma/migrations/`, and `revoked_tokens` created in `core_db`.
 
@@ -1882,8 +1882,8 @@ import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { RpcException } from '@nestjs/microservices';
-import { RedisService } from '@app-k/redis';
-import { AppErrorCode, type AuthUser } from '@app-k/contracts';
+import { RedisService } from '@jagoan-pos/redis';
+import { AppErrorCode, type AuthUser } from '@jagoan-pos/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionService } from './session.service';
 
@@ -2031,7 +2031,7 @@ describe('SessionService', () => {
 
 - [ ] **Step 4: Run the test to verify it fails**
 
-Run: `npm test --workspace=@app-k/core -- session.service`
+Run: `npm test --workspace=@jagoan-pos/core -- session.service`
 Expected: FAIL — `Cannot find module './session.service'`.
 
 - [ ] **Step 5: Write `src/sessions/session.service.ts`**
@@ -2042,9 +2042,9 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { RpcException } from '@nestjs/microservices';
 import { randomUUID } from 'node:crypto';
-import { RedisService } from '@app-k/redis';
-import { cacheKeys } from '@app-k/shared';
-import { AppErrorCode, type AuthUser, type JwtPayload } from '@app-k/contracts';
+import { RedisService } from '@jagoan-pos/redis';
+import { cacheKeys } from '@jagoan-pos/shared';
+import { AppErrorCode, type AuthUser, type JwtPayload } from '@jagoan-pos/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CoreEnv } from '../config/env.schema';
 
@@ -2163,7 +2163,7 @@ export class SessionService {
 
 - [ ] **Step 6: Run the test to verify it passes**
 
-Run: `npm test --workspace=@app-k/core -- session.service`
+Run: `npm test --workspace=@jagoan-pos/core -- session.service`
 Expected: PASS, 10 tests.
 
 - [ ] **Step 7: Write `src/sessions/sessions.module.ts`**
@@ -2217,7 +2217,7 @@ Three defects in the current `AuthService`, all with acceptance criteria in FRD 
 - Modify: `apps/core/src/auth/auth.service.spec.ts`
 
 **Interfaces:**
-- Consumes: `SessionService` (Task 7), `PrismaService`, `RedisService`, `ConfigService<CoreEnv>`, schemas from `@app-k/contracts`.
+- Consumes: `SessionService` (Task 7), `PrismaService`, `RedisService`, `ConfigService<CoreEnv>`, schemas from `@jagoan-pos/contracts`.
 - Produces: `AuthService` with `registerOwner(input): Promise<LoginResult>`, `login(input): Promise<LoginResult>`. `AuthController` answering `core.auth.registerOwner`, `core.auth.login`, `core.auth.resolveSession`, `core.auth.revokeSession`.
 
 - [ ] **Step 1: Write the failing test**
@@ -2227,8 +2227,8 @@ Replace `apps/core/src/auth/auth.service.spec.ts`:
 ```ts
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { RedisService } from '@app-k/redis';
-import { AppErrorCode } from '@app-k/contracts';
+import { RedisService } from '@jagoan-pos/redis';
+import { AppErrorCode } from '@jagoan-pos/contracts';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionService } from '../sessions/session.service';
@@ -2362,7 +2362,7 @@ describe('AuthService.login', () => {
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `npm test --workspace=@app-k/core -- auth.service`
+Run: `npm test --workspace=@jagoan-pos/core -- auth.service`
 Expected: FAIL — `service.onModuleInit is not a function`, and the throttle/timing tests fail.
 
 - [ ] **Step 3: Rewrite `src/auth/auth.service.ts`**
@@ -2373,15 +2373,15 @@ import { ConfigService } from '@nestjs/config';
 import { RpcException } from '@nestjs/microservices';
 import { randomBytes } from 'node:crypto';
 import * as argon2 from 'argon2';
-import { RedisService } from '@app-k/redis';
-import { cacheKeys } from '@app-k/shared';
+import { RedisService } from '@jagoan-pos/redis';
+import { cacheKeys } from '@jagoan-pos/shared';
 import {
   AppErrorCode,
   type AuthUser,
   type LoginInput,
   type LoginResult,
   type RegisterOwnerInput,
-} from '@app-k/contracts';
+} from '@jagoan-pos/contracts';
 import { Prisma } from '../../generated/prisma/client';
 import { Role } from '../../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
@@ -2506,7 +2506,7 @@ export class AuthService implements OnModuleInit {
 
 - [ ] **Step 4: Run the test to verify it passes**
 
-Run: `npm test --workspace=@app-k/core -- auth.service`
+Run: `npm test --workspace=@jagoan-pos/core -- auth.service`
 Expected: PASS, 6 tests.
 
 - [ ] **Step 5: Rewrite `src/auth/auth.controller.ts`**
@@ -2527,7 +2527,7 @@ import {
   resolveSessionSchema,
   revokeSessionSchema,
   type RpcEnvelope,
-} from '@app-k/contracts';
+} from '@jagoan-pos/contracts';
 import { AuthService } from './auth.service';
 import { SessionService } from '../sessions/session.service';
 
@@ -2595,7 +2595,7 @@ The `JwtModule` registration moved to `SessionsModule` — signing is a session 
 - [ ] **Step 7: Verify the whole core suite and typecheck**
 
 ```bash
-npm test --workspace=@app-k/core && npm run typecheck --workspace=@app-k/core
+npm test --workspace=@jagoan-pos/core && npm run typecheck --workspace=@jagoan-pos/core
 ```
 Expected: all suites pass; typecheck clean.
 
@@ -2626,7 +2626,7 @@ The current controller also takes `merchantId` from the payload, which means a c
 - Test: `apps/core/src/staff/staff.repository.spec.ts`
 
 **Interfaces:**
-- Consumes: `PrismaService`, `RedisService`, `SessionService`, `cacheKeys`, staff schemas from `@app-k/contracts`.
+- Consumes: `PrismaService`, `RedisService`, `SessionService`, `cacheKeys`, staff schemas from `@jagoan-pos/contracts`.
 - Produces: `StaffRepository` with `listCashiers(merchantId)`, `createCashier(merchantId, input, passwordHash)`, `setCashierActive(merchantId, cashierId, isActive)`. `StaffService` with `list(merchantId): Promise<CashierListResult>`, `create(merchantId, input): Promise<CashierSummary>`, `setActive(merchantId, input): Promise<CashierSummary>`.
 
 - [ ] **Step 1: Write the failing repository test**
@@ -2707,7 +2707,7 @@ The last test pins a fix: the current `setCashierActive` does `updateMany` then 
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `npm test --workspace=@app-k/core -- staff.repository`
+Run: `npm test --workspace=@jagoan-pos/core -- staff.repository`
 Expected: FAIL — `Cannot find module './staff.repository'`.
 
 - [ ] **Step 3: Write `src/staff/staff.repository.ts`**
@@ -2800,7 +2800,7 @@ export class StaffRepository {
 
 - [ ] **Step 4: Run the repository test to verify it passes**
 
-Run: `npm test --workspace=@app-k/core -- staff.repository`
+Run: `npm test --workspace=@jagoan-pos/core -- staff.repository`
 Expected: PASS, 4 tests.
 
 - [ ] **Step 5: Write the failing service test**
@@ -2809,8 +2809,8 @@ Replace `apps/core/src/staff/staff.service.spec.ts`:
 
 ```ts
 import { Test } from '@nestjs/testing';
-import { RedisService } from '@app-k/redis';
-import { AppErrorCode } from '@app-k/contracts';
+import { RedisService } from '@jagoan-pos/redis';
+import { AppErrorCode } from '@jagoan-pos/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionService } from '../sessions/session.service';
 import { StaffRepository } from './staff.repository';
@@ -2897,7 +2897,7 @@ describe('StaffService', () => {
 
 - [ ] **Step 6: Run the service test to verify it fails**
 
-Run: `npm test --workspace=@app-k/core -- staff.service`
+Run: `npm test --workspace=@jagoan-pos/core -- staff.service`
 Expected: FAIL — `service.list is not a function`.
 
 - [ ] **Step 7: Rewrite `src/staff/staff.service.ts`**
@@ -2906,15 +2906,15 @@ Expected: FAIL — `service.list is not a function`.
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import * as argon2 from 'argon2';
-import { RedisService } from '@app-k/redis';
-import { cacheKeys } from '@app-k/shared';
+import { RedisService } from '@jagoan-pos/redis';
+import { cacheKeys } from '@jagoan-pos/shared';
 import {
   AppErrorCode,
   type CashierListResult,
   type CashierSummary,
   type CreateCashierInput,
   type SetCashierActiveInput,
-} from '@app-k/contracts';
+} from '@jagoan-pos/contracts';
 import { Prisma } from '../../generated/prisma/client';
 import { SessionService } from '../sessions/session.service';
 import { type CashierRow, StaffRepository } from './staff.repository';
@@ -2994,7 +2994,7 @@ function toSummary(row: CashierRow): CashierSummary {
 
 - [ ] **Step 8: Run the service test to verify it passes**
 
-Run: `npm test --workspace=@app-k/core -- staff.service`
+Run: `npm test --workspace=@jagoan-pos/core -- staff.service`
 Expected: PASS, 5 tests.
 
 - [ ] **Step 9: Rewrite `src/staff/staff.controller.ts`**
@@ -3003,8 +3003,8 @@ Expected: PASS, 5 tests.
 import { Controller, ForbiddenException } from '@nestjs/common';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { RedisCacheInterceptor, Cacheable } from '@app-k/redis';
-import { cacheKeys } from '@app-k/shared';
+import { RedisCacheInterceptor, Cacheable } from '@jagoan-pos/redis';
+import { cacheKeys } from '@jagoan-pos/shared';
 import { UseInterceptors } from '@nestjs/common';
 import {
   AppErrorCode,
@@ -3015,7 +3015,7 @@ import {
   type SetCashierActiveInput,
   createCashierSchema,
   setCashierActiveSchema,
-} from '@app-k/contracts';
+} from '@jagoan-pos/contracts';
 import { StaffService } from './staff.service';
 
 @Controller()
@@ -3097,9 +3097,9 @@ rm -rf apps/core/src/staff/dto
 - [ ] **Step 11: Verify the full core suite, typecheck, and boot**
 
 ```bash
-npm test --workspace=@app-k/core
-npm run typecheck --workspace=@app-k/core
-npm run build --workspace=@app-k/core && node apps/core/dist/main.js &
+npm test --workspace=@jagoan-pos/core
+npm run typecheck --workspace=@jagoan-pos/core
+npm run build --workspace=@jagoan-pos/core && node apps/core/dist/main.js &
 sleep 3 && nc -z localhost 4001 && echo "core listening" && kill %1
 ```
 Expected: all tests pass; typecheck clean; `core listening`.
@@ -3128,7 +3128,7 @@ git commit -m "refactor(core): scope staff queries in a repository, derive tenan
 - Test: `apps/api-gateway/src/common/filters/rpc-exception.filter.spec.ts`
 
 **Interfaces:**
-- Consumes: `AppErrorCode`, `RpcErrorShape` from `@app-k/contracts`; `validateEnv`, `buildLoggerOptions` from `@app-k/shared`.
+- Consumes: `AppErrorCode`, `RpcErrorShape` from `@jagoan-pos/contracts`; `validateEnv`, `buildLoggerOptions` from `@jagoan-pos/shared`.
 - Produces: `gatewayEnvSchema`, `type GatewayEnv`; `CorrelationIdMiddleware` setting `req.correlationId` and the `x-correlation-id` response header; `RpcExceptionFilter` mapping `AppErrorCode` → HTTP status.
 
 - [ ] **Step 1: Write the failing test**
@@ -3138,7 +3138,7 @@ Create `apps/api-gateway/src/common/filters/rpc-exception.filter.spec.ts`:
 ```ts
 import { HttpException, HttpStatus } from '@nestjs/common';
 import type { ArgumentsHost } from '@nestjs/common';
-import { AppErrorCode } from '@app-k/contracts';
+import { AppErrorCode } from '@jagoan-pos/contracts';
 import { RpcExceptionFilter } from './rpc-exception.filter';
 
 function makeHost(): { host: ArgumentsHost; json: jest.Mock; status: jest.Mock } {
@@ -3198,7 +3198,7 @@ describe('RpcExceptionFilter', () => {
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `npm test --workspace=@app-k/api-gateway -- rpc-exception`
+Run: `npm test --workspace=@jagoan-pos/api-gateway -- rpc-exception`
 Expected: FAIL — module not found, and the workspace is still `api-gateway`.
 
 - [ ] **Step 3: Write `src/common/filters/rpc-exception.filter.ts`**
@@ -3213,7 +3213,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { AppErrorCode, type RpcErrorShape } from '@app-k/contracts';
+import { AppErrorCode, type RpcErrorShape } from '@jagoan-pos/contracts';
 
 const STATUS_BY_CODE: Record<AppErrorCode, HttpStatus> = {
   [AppErrorCode.EMAIL_ALREADY_EXISTS]: HttpStatus.CONFLICT,
@@ -3299,7 +3299,7 @@ Two fixes over the current `RpcErrorFilter`: it now has `@Catch()`, and an unrec
 
 - [ ] **Step 4: Run the test to verify it passes**
 
-Run: `npm test --workspace=@app-k/api-gateway -- rpc-exception`
+Run: `npm test --workspace=@jagoan-pos/api-gateway -- rpc-exception`
 Expected: PASS, 11 tests.
 
 - [ ] **Step 5: Write `src/config/env.schema.ts` and `.env.example`**
@@ -3460,8 +3460,8 @@ import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { resolve } from 'node:path';
-import { buildLoggerOptions, validateEnv } from '@app-k/shared';
-import { RedisModule } from '@app-k/redis';
+import { buildLoggerOptions, validateEnv } from '@jagoan-pos/shared';
+import { RedisModule } from '@jagoan-pos/redis';
 import { gatewayEnvSchema } from './config/env.schema';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { ClientsModule } from './clients/clients.module';
@@ -3494,14 +3494,14 @@ This will not compile until Tasks 11 and 12 create `ClientsModule`, `AuthRoutesM
 
 - [ ] **Step 10: Update the manifest, tsconfig, and delete boilerplate**
 
-`apps/api-gateway/package.json` — rename to `@app-k/api-gateway`, mirroring core's script block, with these dependencies:
+`apps/api-gateway/package.json` — rename to `@jagoan-pos/api-gateway`, mirroring core's script block, with these dependencies:
 
 ```json
 {
   "dependencies": {
-    "@app-k/contracts": "^0.0.1",
-    "@app-k/redis": "^0.0.1",
-    "@app-k/shared": "^0.0.1",
+    "@jagoan-pos/contracts": "^0.0.1",
+    "@jagoan-pos/redis": "^0.0.1",
+    "@jagoan-pos/shared": "^0.0.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
@@ -3537,7 +3537,7 @@ cp apps/api-gateway/.env.example apps/api-gateway/.env
 npm install
 npx tsc --noEmit --strict --esModuleInterop --experimentalDecorators --emitDecoratorMetadata \
   --skipLibCheck apps/api-gateway/src/common/filters/rpc-exception.filter.ts
-npm test --workspace=@app-k/api-gateway
+npm test --workspace=@jagoan-pos/api-gateway
 ```
 Expected: no type errors from the filter; 11 tests pass.
 
@@ -3565,7 +3565,7 @@ The current gateway injects a raw `ClientProxy` into controllers and returns `Ob
 Only the core client is built here. `products.client.ts`, `transactions.client.ts`, and `reports.client.ts` land with the feature plans that give them a caller — a wrapper with no consumer is dead code, and `TypedClient` makes each one about fifteen lines.
 
 **Interfaces:**
-- Consumes: `CoreContract`, `CorePattern`, `CoreRequest`, `CoreResponse`, `RpcEnvelope`, `Actor` from `@app-k/contracts`.
+- Consumes: `CoreContract`, `CorePattern`, `CoreRequest`, `CoreResponse`, `RpcEnvelope`, `Actor` from `@jagoan-pos/contracts`.
 - Produces:
   - `CORE_SERVICE` injection token
   - `abstract class TypedClient<TContract>` with `protected dispatch<P>(pattern, data, meta)`
@@ -3635,7 +3635,7 @@ describe('CoreClient', () => {
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `npm test --workspace=@app-k/api-gateway -- core.client`
+Run: `npm test --workspace=@jagoan-pos/api-gateway -- core.client`
 Expected: FAIL — `Cannot find module './core.client'`.
 
 - [ ] **Step 3: Write `src/clients/typed.client.ts`**
@@ -3643,7 +3643,7 @@ Expected: FAIL — `Cannot find module './core.client'`.
 ```ts
 import type { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import type { RpcEnvelope, RpcMeta } from '@app-k/contracts';
+import type { RpcEnvelope, RpcMeta } from '@jagoan-pos/contracts';
 
 /**
  * A contract map: pattern string -> { request, response }.
@@ -3684,7 +3684,7 @@ import type {
   RegisterOwnerInput,
   RpcMeta,
   SetCashierActiveInput,
-} from '@app-k/contracts';
+} from '@jagoan-pos/contracts';
 import { TypedClient } from './typed.client';
 
 export const CORE_SERVICE = Symbol('CORE_SERVICE');
@@ -3728,7 +3728,7 @@ export class CoreClient extends TypedClient<CoreContract> {
 
 - [ ] **Step 5: Run the test to verify it passes**
 
-Run: `npm test --workspace=@app-k/api-gateway -- core.client`
+Run: `npm test --workspace=@jagoan-pos/api-gateway -- core.client`
 Expected: PASS, 3 tests.
 
 - [ ] **Step 6: Write `src/clients/clients.module.ts`**
@@ -3772,7 +3772,7 @@ Temporarily add to `core.client.ts`:
   }
 ```
 
-Run: `npm run typecheck --workspace=@app-k/api-gateway 2>&1 | grep -c "core.auth.loginn"`
+Run: `npm run typecheck --workspace=@jagoan-pos/api-gateway 2>&1 | grep -c "core.auth.loginn"`
 Expected: at least `1` — the typo does not compile. **Delete the `broken` method before continuing.**
 
 - [ ] **Step 8: Commit**
@@ -3813,7 +3813,7 @@ Create `apps/api-gateway/src/common/guards/jwt-auth.guard.spec.ts`:
 import { Test } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException, type ExecutionContext } from '@nestjs/common';
-import { RedisService } from '@app-k/redis';
+import { RedisService } from '@jagoan-pos/redis';
 import { CoreClient } from '../../clients/core.client';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
@@ -3912,7 +3912,7 @@ describe('JwtAuthGuard', () => {
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `npm test --workspace=@app-k/api-gateway -- jwt-auth.guard`
+Run: `npm test --workspace=@jagoan-pos/api-gateway -- jwt-auth.guard`
 Expected: FAIL — `Cannot find module './jwt-auth.guard'`.
 
 - [ ] **Step 3: Write `src/common/guards/jwt-auth.guard.ts`**
@@ -3926,9 +3926,9 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
-import { RedisService } from '@app-k/redis';
-import { cacheKeys } from '@app-k/shared';
-import { type AuthUser, type RpcMeta, jwtPayloadSchema } from '@app-k/contracts';
+import { RedisService } from '@jagoan-pos/redis';
+import { cacheKeys } from '@jagoan-pos/shared';
+import { type AuthUser, type RpcMeta, jwtPayloadSchema } from '@jagoan-pos/contracts';
 import { CoreClient } from '../../clients/core.client';
 
 const REVOKED = 'revoked';
@@ -3998,7 +3998,7 @@ export class JwtAuthGuard implements CanActivate {
 
 - [ ] **Step 4: Run the test to verify it passes**
 
-Run: `npm test --workspace=@app-k/api-gateway -- jwt-auth.guard`
+Run: `npm test --workspace=@jagoan-pos/api-gateway -- jwt-auth.guard`
 Expected: PASS, 6 tests.
 
 - [ ] **Step 5: Write the decorators and roles guard**
@@ -4007,7 +4007,7 @@ Expected: PASS, 6 tests.
 
 ```ts
 import { SetMetadata } from '@nestjs/common';
-import type { UserRole } from '@app-k/contracts';
+import type { UserRole } from '@jagoan-pos/contracts';
 
 export const ROLES_KEY = 'roles';
 export const Roles = (...roles: UserRole[]) => SetMetadata(ROLES_KEY, roles);
@@ -4018,7 +4018,7 @@ export const Roles = (...roles: UserRole[]) => SetMetadata(ROLES_KEY, roles);
 ```ts
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
 import type { Request } from 'express';
-import type { AuthUser } from '@app-k/contracts';
+import type { AuthUser } from '@jagoan-pos/contracts';
 
 export const CurrentUser = createParamDecorator(
   <K extends keyof AuthUser>(field: K | undefined, ctx: ExecutionContext) => {
@@ -4042,7 +4042,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import type { UserRole } from '@app-k/contracts';
+import type { UserRole } from '@jagoan-pos/contracts';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
@@ -4069,7 +4069,7 @@ export class RolesGuard implements CanActivate {
 
 ```ts
 import type { Request } from 'express';
-import type { RpcMeta } from '@app-k/contracts';
+import type { RpcMeta } from '@jagoan-pos/contracts';
 
 /** The only place an Actor is constructed — always from the verified session. */
 export function buildMeta(req: Request): RpcMeta {
@@ -4088,7 +4088,7 @@ export function buildMeta(req: Request): RpcMeta {
 
 ```ts
 import { createZodDto } from 'nestjs-zod';
-import { loginSchema, registerOwnerSchema } from '@app-k/contracts';
+import { loginSchema, registerOwnerSchema } from '@jagoan-pos/contracts';
 
 export class LoginDto extends createZodDto(loginSchema) {}
 export class RegisterOwnerDto extends createZodDto(registerOwnerSchema) {}
@@ -4101,7 +4101,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } fro
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import type { Request } from 'express';
-import type { AuthUser, LoginResult } from '@app-k/contracts';
+import type { AuthUser, LoginResult } from '@jagoan-pos/contracts';
 import { CoreClient } from '../../clients/core.client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -4179,7 +4179,7 @@ export class AuthRoutesModule {}
 ```ts
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
-import { createCashierSchema, setCashierActiveSchema } from '@app-k/contracts';
+import { createCashierSchema, setCashierActiveSchema } from '@jagoan-pos/contracts';
 
 export class CreateCashierDto extends createZodDto(createCashierSchema) {}
 
@@ -4198,7 +4198,7 @@ import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Req, UseGuard
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import type { Request } from 'express';
-import type { CashierListResult, CashierSummary } from '@app-k/contracts';
+import type { CashierListResult, CashierSummary } from '@jagoan-pos/contracts';
 import { CoreClient } from '../../clients/core.client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -4267,7 +4267,7 @@ Expected: no output, `exit=1`. Also drop `passport`, `passport-jwt`, `@nestjs/pa
 - [ ] **Step 9: Verify typecheck and the whole gateway suite**
 
 ```bash
-npm install && npm run typecheck --workspace=@app-k/api-gateway && npm test --workspace=@app-k/api-gateway
+npm install && npm run typecheck --workspace=@jagoan-pos/api-gateway && npm test --workspace=@jagoan-pos/api-gateway
 ```
 Expected: typecheck clean; all suites pass.
 
@@ -4276,8 +4276,8 @@ Expected: typecheck clean; all suites pass.
 ```bash
 docker compose up -d
 npm run build:packages
-npm run start:prod --workspace=@app-k/core &
-npm run start:prod --workspace=@app-k/api-gateway &
+npm run start:prod --workspace=@jagoan-pos/core &
+npm run start:prod --workspace=@jagoan-pos/api-gateway &
 sleep 5
 
 # Register — expect 201 with an accessToken
@@ -4336,8 +4336,8 @@ git commit -m "feat(api-gateway): redis-backed session guard, typed routes, logo
 - Test: `apps/products/src/health.controller.spec.ts` (one per service)
 
 **Interfaces:**
-- Consumes: `validateEnv`, `buildLoggerOptions` from `@app-k/shared`.
-- Produces: workspaces `@app-k/products` (TCP 4002), `@app-k/transactions` (TCP 4003), `@app-k/reports` (TCP 4004), each answering `<service>.health.ping` with `{ service, status: 'ok' }`.
+- Consumes: `validateEnv`, `buildLoggerOptions` from `@jagoan-pos/shared`.
+- Produces: workspaces `@jagoan-pos/products` (TCP 4002), `@jagoan-pos/transactions` (TCP 4003), `@jagoan-pos/reports` (TCP 4004), each answering `<service>.health.ping` with `{ service, status: 'ok' }`.
 
 - [ ] **Step 1: Apply the renames and the deletion**
 
@@ -4379,7 +4379,7 @@ For `transactions` and `reports`, create the identical file under their own `src
 
 - [ ] **Step 3: Run the test to verify it fails**
 
-Run: `npm test --workspace=@app-k/products -- health`
+Run: `npm test --workspace=@jagoan-pos/products -- health`
 Expected: FAIL — the workspace is still `products-service`, and `health.controller` does not exist.
 
 - [ ] **Step 4: Write the health controller (products; repeat for the other two)**
@@ -4435,7 +4435,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { resolve } from 'node:path';
-import { buildLoggerOptions, validateEnv } from '@app-k/shared';
+import { buildLoggerOptions, validateEnv } from '@jagoan-pos/shared';
 import { productsEnvSchema } from './config/env.schema';
 import { HealthController } from './health.controller';
 
@@ -4489,11 +4489,11 @@ void bootstrap();
 
 - [ ] **Step 7: Write each `package.json`**
 
-`apps/products/package.json` — the same shape as `@app-k/core` from Task 6 Step 4, with `"name": "@app-k/products"` and no `argon2`/`@nestjs/jwt`:
+`apps/products/package.json` — the same shape as `@jagoan-pos/core` from Task 6 Step 4, with `"name": "@jagoan-pos/products"` and no `argon2`/`@nestjs/jwt`:
 
 ```json
 {
-  "name": "@app-k/products",
+  "name": "@jagoan-pos/products",
   "version": "0.0.1",
   "private": true,
   "license": "UNLICENSED",
@@ -4509,9 +4509,9 @@ void bootstrap();
     "prisma:deploy": "prisma migrate deploy"
   },
   "dependencies": {
-    "@app-k/contracts": "^0.0.1",
-    "@app-k/redis": "^0.0.1",
-    "@app-k/shared": "^0.0.1",
+    "@jagoan-pos/contracts": "^0.0.1",
+    "@jagoan-pos/redis": "^0.0.1",
+    "@jagoan-pos/shared": "^0.0.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
@@ -4550,7 +4550,7 @@ void bootstrap();
 }
 ```
 
-`apps/transactions/package.json` is identical with `"name": "@app-k/transactions"`. `apps/reports/package.json` is identical with `"name": "@app-k/reports"` and no `@app-k/redis`.
+`apps/transactions/package.json` is identical with `"name": "@jagoan-pos/transactions"`. `apps/reports/package.json` is identical with `"name": "@jagoan-pos/reports"` and no `@jagoan-pos/redis`.
 
 Each service's `tsconfig.json` and `nest-cli.json` are copies of `apps/core`'s.
 
@@ -4558,7 +4558,7 @@ Each service's `tsconfig.json` and `nest-cli.json` are copies of `apps/core`'s.
 
 ```bash
 npm install
-npm test --workspace=@app-k/products --workspace=@app-k/transactions --workspace=@app-k/reports
+npm test --workspace=@jagoan-pos/products --workspace=@jagoan-pos/transactions --workspace=@jagoan-pos/reports
 ```
 Expected: PASS, 1 test per service.
 
@@ -4621,7 +4621,7 @@ Under Route B from Task 5, the pooler cannot reach `products_db`, `transactions_
 ```bash
 for s in products transactions reports; do cp apps/$s/.env.example apps/$s/.env; done
 npm run build:packages
-npm run build --workspace=@app-k/products --workspace=@app-k/transactions --workspace=@app-k/reports
+npm run build --workspace=@jagoan-pos/products --workspace=@jagoan-pos/transactions --workspace=@jagoan-pos/reports
 
 for s in products transactions reports; do
   ( cd apps/$s && node dist/main.js & )
@@ -4703,9 +4703,9 @@ RUN npm ci \
   && npm run build:packages \
   # Prisma generate is a no-op for services without a schema.
   && if [ -f "apps/${SERVICE}/prisma/schema.prisma" ]; then \
-       npm run prisma:generate --workspace=@app-k/${SERVICE}; \
+       npm run prisma:generate --workspace=@jagoan-pos/${SERVICE}; \
      fi \
-  && npm run build --workspace=@app-k/${SERVICE} \
+  && npm run build --workspace=@jagoan-pos/${SERVICE} \
   && npm prune --omit=dev
 
 FROM node:${NODE_VERSION}-bookworm-slim AS runtime
@@ -4858,7 +4858,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' -X POST localhost:3000/api/auth/regist
 ```
 Expected: all six services `running` (redis plus the five apps); the register call returns `201`.
 
-Migrations run against Supabase from your workstation, not from a container — `npm run prisma:deploy --workspace=@app-k/core` with `CORE_DIRECT_URL` set. If they have not been applied, the register call returns 500.
+Migrations run against Supabase from your workstation, not from a container — `npm run prisma:deploy --workspace=@jagoan-pos/core` with `CORE_DIRECT_URL` set. If they have not been applied, the register call returns 500.
 
 - [ ] **Step 6: Verify the services are not reachable from the host**
 
@@ -4948,7 +4948,7 @@ jobs:
       - name: Generate Prisma clients
         run: |
           for s in core products transactions reports; do
-            npm run prisma:generate --workspace=@app-k/$s
+            npm run prisma:generate --workspace=@jagoan-pos/$s
           done
         env:
           CORE_DIRECT_URL: postgresql://postgres:postgres@localhost:5432/core_db
@@ -4957,7 +4957,7 @@ jobs:
           REPORTS_DIRECT_URL: postgresql://postgres:postgres@localhost:5432/reports_db
 
       - name: Apply migrations
-        run: npm run prisma:deploy --workspace=@app-k/core
+        run: npm run prisma:deploy --workspace=@jagoan-pos/core
         env:
           CORE_DIRECT_URL: postgresql://postgres:postgres@localhost:5432/core_db
 
@@ -4971,11 +4971,11 @@ jobs:
       # invisible to tsc because both compile fine on their own.
       - name: Check package layering
         run: |
-          if grep -rq "@app-k/contracts" packages/shared/src; then
-            echo "packages/shared must not import @app-k/contracts"; exit 1
+          if grep -rq "@jagoan-pos/contracts" packages/shared/src; then
+            echo "packages/shared must not import @jagoan-pos/contracts"; exit 1
           fi
-          if grep -rq "@app-k/shared" packages/contracts/src; then
-            echo "packages/contracts must not import @app-k/shared"; exit 1
+          if grep -rq "@jagoan-pos/shared" packages/contracts/src; then
+            echo "packages/contracts must not import @jagoan-pos/shared"; exit 1
           fi
 
       # `nest new` scaffolds a standalone tsconfig. Without this, a new service

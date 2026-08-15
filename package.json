@@ -1,12 +1,12 @@
 {
-  "name": "app-k",
+  "name": "jagoan-pos",
   "version": "1.0.0",
   "private": true,
   "license": "UNLICENSED",
   "engines": { "node": ">=22.0.0" },
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "build:packages": "npm run build --workspace=@app-k/contracts --workspace=@app-k/shared --workspace=@app-k/redis",
+    "build:packages": "npm run build --workspace=@jagoan-pos/contracts --workspace=@jagoan-pos/shared --workspace=@jagoan-pos/redis",
     "build": "npm run build:packages && npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",

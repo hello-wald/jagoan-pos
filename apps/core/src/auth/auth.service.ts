@@ -4,7 +4,7 @@ import { LoginDto, RegisterOwnerDto } from './dto/auth.dto';
 import * as argon2 from 'argon2';
 import { Role } from 'generated/prisma/enums';
 import { RpcException } from '@nestjs/microservices';
-import { AuthErrorCode } from '@app-k/shared';
+import { AuthErrorCode } from '@jagoan-pos/shared';
 import { JwtService } from '@nestjs/jwt';
 import { Prisma } from 'generated/prisma/client';
 

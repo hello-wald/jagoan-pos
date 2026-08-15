@@ -1,5 +1,5 @@
 {
-  "name": "@app-k/shared",
+  "name": "@jagoan-pos/shared",
   "version": "0.0.1",
   "private": true,
   "main": "./dist/index.js",

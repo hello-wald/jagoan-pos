@@ -7,7 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { StaffModule } from './staff/staff.module';
 import * as Joi from 'joi';
-import { RedisModule } from '@app-k/redis';
+import { RedisModule } from '@jagoan-pos/redis';
 
 @Module({
   imports: [

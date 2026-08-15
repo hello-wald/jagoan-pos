@@ -1,6 +1,6 @@
 import { createParamDecorator, ExecutionContext } from "@nestjs/common";
 import { type Request } from "express";
-import { type AuthUser } from "@app-k/shared";
+import { type AuthUser } from "@jagoan-pos/shared";
 
 
 export const CurrentUser = createParamDecorator( 

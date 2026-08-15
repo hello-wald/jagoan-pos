@@ -1,4 +1,4 @@
-import { createCashierSchema, setCashierActiveSchema } from "@app-k/shared";
+import { createCashierSchema, setCashierActiveSchema } from "@jagoan-pos/shared";
 import { createZodDto } from "nestjs-zod";
 
 

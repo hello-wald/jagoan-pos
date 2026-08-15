@@ -1,4 +1,4 @@
-import { UserRole } from "@app-k/shared"
+import { UserRole } from "@jagoan-pos/shared"
 import { SetMetadata } from "@nestjs/common"
 
 export const ROLES_KEY = 'roles'

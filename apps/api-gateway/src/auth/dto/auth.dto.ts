@@ -1,4 +1,4 @@
-import { loginSchema, registerOwnerSchema } from "@app-k/shared";
+import { loginSchema, registerOwnerSchema } from "@jagoan-pos/shared";
 import { createZodDto } from "nestjs-zod";
 
 

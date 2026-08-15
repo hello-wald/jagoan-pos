@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { lastValueFrom } from "rxjs";
-import {type AuthUser, type JwtPayload} from "@app-k/shared"
+import {type AuthUser, type JwtPayload} from "@jagoan-pos/shared"
 import { ClientProxy } from "@nestjs/microservices";
 
 

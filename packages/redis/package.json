@@ -1,5 +1,5 @@
 {
-  "name": "@app-k/redis",
+  "name": "@jagoan-pos/redis",
   "version": "0.0.1",
   "private": true,
   "main": "./dist/index.js",

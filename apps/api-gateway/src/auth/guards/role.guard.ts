@@ -1,4 +1,4 @@
-import { AuthUser, UserRole } from "@app-k/shared";
+import { AuthUser, UserRole } from "@jagoan-pos/shared";
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { ROLES_KEY } from "../decorator/role.decorator";

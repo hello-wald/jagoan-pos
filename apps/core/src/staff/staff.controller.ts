@@ -2,8 +2,8 @@ import { Controller, UseInterceptors } from '@nestjs/common';
 import { StaffService } from './staff.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CreateCashierDto, SetCashierActiveDto } from './dto/staff.dto';
-import { RedisCacheInterceptor, Cacheable } from '@app-k/redis';
-import { redisKeys } from '@app-k/shared';
+import { RedisCacheInterceptor, Cacheable } from '@jagoan-pos/redis';
+import { redisKeys } from '@jagoan-pos/shared';
 
 @Controller()
 export class StaffController {

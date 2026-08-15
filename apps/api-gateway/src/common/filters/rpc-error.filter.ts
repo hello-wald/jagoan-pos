@@ -5,7 +5,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { AuthErrorCode, StaffErrorCode } from '@app-k/shared';
+import { AuthErrorCode, StaffErrorCode } from '@jagoan-pos/shared';
 
 type RpcErrorPayload = {
   code?: string;

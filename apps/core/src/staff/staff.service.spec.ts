@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StaffService } from './staff.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from '@app-k/redis';
+import { RedisService } from '@jagoan-pos/redis';
 import { Role } from 'generated/prisma/enums';
 import { Prisma } from 'generated/prisma/client';
 import { RpcException } from '@nestjs/microservices';
-import { AuthErrorCode, redisKeys, StaffErrorCode } from '@app-k/shared';
+import { AuthErrorCode, redisKeys, StaffErrorCode } from '@jagoan-pos/shared';
 import * as argon2 from 'argon2';
 
 jest.mock('argon2', () => ({

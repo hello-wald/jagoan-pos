@@ -4,7 +4,7 @@ import { CurrentUser } from './decorator/current-user.decorator';
 import { JwtGuard } from './guards/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { LoginDto, RegisterOwnerDto } from './dto/auth.dto';
-import { type AuthUser } from '@app-k/shared';
+import { type AuthUser } from '@jagoan-pos/shared';
 import { RolesGuard } from './guards/role.guard';
 import { Roles } from './decorator/role.decorator';
 
