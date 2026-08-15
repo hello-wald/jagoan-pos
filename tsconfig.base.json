@@ -6,9 +6,7 @@
     "lib": ["ES2023"],
     "declaration": true,
     "sourceMap": true,
-    "incremental": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -17,6 +15,5 @@
     "strict": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true
-  },
-  "exclude": ["node_modules", "dist"]
+  }
 }

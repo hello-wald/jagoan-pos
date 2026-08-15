@@ -2,23 +2,16 @@
   "name": "@jagoan-pos/contracts",
   "version": "0.0.1",
   "private": true,
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/cjs/index.d.ts",
-  "sideEffects": false,
-  "exports": {
-    ".": {
-      "types": "./dist/cjs/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
-    }
-  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig.esm.json && node -e \"require('fs').writeFileSync('dist/esm/package.json', JSON.stringify({type:'module'}))\"",
+    "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "jest"
   },
-  "dependencies": { "zod": "^4.4.3" },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "jest": "^30.0.0",
@@ -26,10 +19,16 @@
     "typescript": "^5.7.3"
   },
   "jest": {
-    "moduleFileExtensions": ["js", "json", "ts"],
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
-    "transform": { "^.+\\.(t|j)s$": "ts-jest" },
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
     "testEnvironment": "node"
   }
 }

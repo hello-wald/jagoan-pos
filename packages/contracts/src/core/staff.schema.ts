@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { UserSummary } from '../rpc';
 
 const nameSchema = z.string().trim().min(1).max(150);
 const emailSchema = z.string().trim().toLowerCase().pipe(z.email('Invalid email address'));
@@ -10,25 +11,13 @@ export const createCashierSchema = z.object({
 });
 
 export const setCashierActiveSchema = z.object({
-  cashierId: z.uuid(),
   isActive: z.boolean(),
 });
 
 export type CreateCashierInput = z.infer<typeof createCashierSchema>;
 export type SetCashierActiveInput = z.infer<typeof setCashierActiveSchema>;
 
-export type CashierSummary = {
-  id: string;
-  merchantId: string | null;
-  fullName: string;
-  email: string;
-  role: 'CASHIER';
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export type CashierListResult = {
-  data: CashierSummary[];
+  data: UserSummary[];
   summary: { total: number; active: number; inactive: number };
 };

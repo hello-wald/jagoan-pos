@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_PIPE } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
-import { resolve } from 'node:path';
+import { ZodValidationPipe } from 'nestjs-zod';
 import { buildLoggerOptions, validateEnv } from '@jagoan-pos/shared';
 import { RedisModule } from '@jagoan-pos/redis';
-import { coreEnvSchema } from './config/env.schema';
+import { ENV_FILE_PATH, coreEnvSchema } from './config/env.schema';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { StaffModule } from './staff/staff.module';
@@ -13,11 +14,7 @@ import { StaffModule } from './staff/staff.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      // Resolved from __dirname, not process.cwd(). One shared .env lives at
-      // the repo root (not per-service) so JWT_SECRET/REDIS_URL can't drift
-      // between services; this file compiles to apps/core/dist/app.module.js,
-      // so three levels up is the repo root.
-      envFilePath: [resolve(__dirname, '..', '..', '..', '.env')],
+      envFilePath: [ENV_FILE_PATH],
       ignoreEnvFile: process.env.NODE_ENV === 'production',
       validate: validateEnv(coreEnvSchema),
     }),
@@ -27,5 +24,6 @@ import { StaffModule } from './staff/staff.module';
     AuthModule,
     StaffModule,
   ],
+  providers: [{ provide: APP_PIPE, useClass: ZodValidationPipe }],
 })
 export class AppModule {}

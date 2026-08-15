@@ -4,7 +4,14 @@ import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/generated/**', '**/node_modules/**'] },
+  {
+    ignores: [
+      '**/dist/**',
+      '**/generated/**',
+      '**/node_modules/**',
+      'apps/ai-analytics/**',
+    ],
+  },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   prettier,
@@ -26,7 +33,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
+    files: ['**/*.spec.ts'],
     languageOptions: { parserOptions: { projectService: false, project: null } },
     rules: { '@typescript-eslint/no-floating-promises': 'off' },
   },

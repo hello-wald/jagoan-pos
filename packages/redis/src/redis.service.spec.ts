@@ -49,8 +49,7 @@ describe('RedisService', () => {
     expect(client.set).toHaveBeenCalledWith('k', '{"a":1}', 'EX', 60);
   });
 
-  // Regression: incrWithTtl must only set the expiry on the first increment,
-  // otherwise the 15-minute lockout window slides forever and never lapses.
+  // Regression: expiry on every increment would make the window slide forever.
   it('sets the ttl only on the first increment', async () => {
     client.incr.mockResolvedValueOnce(1);
     await service.incrWithTtl('k', 900);
@@ -62,8 +61,7 @@ describe('RedisService', () => {
     expect(client.expire).not.toHaveBeenCalled();
   });
 
-  // setRaw with ttl omitted must preserve whatever ttl is already on the key,
-  // rather than clearing it (a plain SET with no options would strip the ttl).
+  // A plain SET with no options would strip the existing ttl.
   it('writes a raw value with KEEPTTL when no ttl is given', async () => {
     await service.setRaw('k', 'v');
     expect(client.set).toHaveBeenCalledWith('k', 'v', 'KEEPTTL');
@@ -74,8 +72,7 @@ describe('RedisService', () => {
     expect(client.set).toHaveBeenCalledWith('k', 'v', 'EX', 60);
   });
 
-  // Unlike get(), getRaw() must not attempt to JSON-parse the value — it
-  // returns whatever setRaw wrote, verbatim, even if that isn't valid JSON.
+  // getRaw returns what setRaw wrote, even when that isn't valid JSON.
   it('returns a raw string verbatim without JSON-parsing it', async () => {
     client.get.mockResolvedValue('revoked');
     await expect(service.getRaw('k')).resolves.toBe('revoked');
@@ -86,8 +83,7 @@ describe('RedisService', () => {
     await expect(service.getRaw('k')).resolves.toBeNull();
   });
 
-  // The variadic spread is the part that can silently drop keys, so assert
-  // with more than one key.
+  // The variadic spread is what can silently drop keys.
   it('forwards every key to del in a single call', async () => {
     await service.del('a', 'b', 'c');
     expect(client.del).toHaveBeenCalledWith('a', 'b', 'c');
@@ -104,8 +100,7 @@ describe('RedisService', () => {
     await expect(service.smembers('k')).resolves.toEqual(['member-1', 'member-2']);
   });
 
-  // Cache must never take the caller down — fail open with an empty set,
-  // not undefined and not a thrown error.
+  // Fail open with an empty set, not undefined and not a throw.
   it('returns an empty array from smembers when Redis is unreachable', async () => {
     client.smembers.mockRejectedValue(new Error('ECONNREFUSED'));
     await expect(service.smembers('k')).resolves.toEqual([]);

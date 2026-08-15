@@ -13,8 +13,7 @@ import { RedisCacheInterceptor } from './interceptors/redis-cache.interceptor';
       useFactory: (config: ConfigService) =>
         new Redis(config.getOrThrow<string>('REDIS_URL'), {
           maxRetriesPerRequest: 2,
-          // Fail fast instead of buffering commands while disconnected —
-          // the cache must degrade, not queue up latency on the hot path.
+          // Degrade rather than queue latency on the hot path.
           enableOfflineQueue: false,
           lazyConnect: false,
         }),

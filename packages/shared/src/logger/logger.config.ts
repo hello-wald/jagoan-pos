@@ -1,17 +1,13 @@
 import type { Params } from 'nestjs-pino';
 
-/**
- * One logging configuration for all five apps. Pretty in dev, JSON in prod.
- * `correlationId` is bound per-request by the gateway middleware and forwarded
- * to services in RpcMeta.
- */
+/** Shared logger config: pretty in dev, JSON in prod. */
 export function buildLoggerOptions(serviceName: string): Params {
   const isProd = process.env.NODE_ENV === 'production';
   return {
     pinoHttp: {
       name: serviceName,
       level: process.env.LOG_LEVEL ?? (isProd ? 'info' : 'debug'),
-      autoLogging: !isProd ? false : true,
+      autoLogging: isProd,
       redact: {
         paths: [
           'req.headers.authorization',

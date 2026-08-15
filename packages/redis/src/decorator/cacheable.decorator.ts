@@ -1,16 +1,14 @@
-import { CustomDecorator, ExecutionContext, SetMetadata } from "@nestjs/common"
+import type { CustomDecorator, ExecutionContext } from '@nestjs/common';
+import { SetMetadata } from '@nestjs/common';
 
+export const CACHEABLE_KEY = 'cacheable';
 
-export const CACHEABLE_KEY = 'cacheable'
-
-export type CacheKeyFactory = (
-    context: ExecutionContext
-) => string | null | undefined;
-
+export type CacheKeyFactory = (context: ExecutionContext) => string | null | undefined;
 
 export interface CacheableOptions {
-    key: CacheKeyFactory, 
-    ttlSeconds?: number
+  key: CacheKeyFactory;
+  ttlSeconds?: number;
 }
 
-export const Cacheable = (options: CacheableOptions): CustomDecorator<string> => SetMetadata(CACHEABLE_KEY, options)
+export const Cacheable = (options: CacheableOptions): CustomDecorator<string> =>
+  SetMetadata(CACHEABLE_KEY, options);

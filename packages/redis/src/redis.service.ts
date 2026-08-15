@@ -19,7 +19,7 @@ export class RedisService implements OnModuleDestroy {
     }
   }
 
-  /** Reads a value written by `setRaw` — no JSON parsing. */
+  /** Reads a `setRaw` value, unparsed. */
   async getRaw(key: string): Promise<string | null> {
     try {
       return await this.client.get(key);
@@ -37,7 +37,7 @@ export class RedisService implements OnModuleDestroy {
     }
   }
 
-  /** Writes a bare string, preserving the existing ttl when `keepTtl` is set. */
+  /** Writes a bare string, preserving the existing ttl when none is given. */
   async setRaw(key: string, value: string, ttlSeconds?: number): Promise<void> {
     try {
       if (ttlSeconds === undefined) {
@@ -59,11 +59,7 @@ export class RedisService implements OnModuleDestroy {
     }
   }
 
-  /**
-   * Increments a counter and sets its expiry only on first write, so the
-   * window is fixed rather than sliding. Returns the new count, or 0 if
-   * Redis is unreachable (fail-open — a cache outage must not lock users out).
-   */
+  /** Fixed (not sliding) window counter. Returns 0 if Redis is down, so an outage never locks users out. */
   async incrWithTtl(key: string, ttlSeconds: number): Promise<number> {
     try {
       const count = await this.client.incr(key);
