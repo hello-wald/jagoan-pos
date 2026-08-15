@@ -5,6 +5,7 @@ node_modules
 .env
 .env.*
 !.env.example
+!deploy/gcp/.env.example
 apps/*/.env
 
 # Build output
