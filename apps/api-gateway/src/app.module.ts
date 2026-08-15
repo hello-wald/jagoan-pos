@@ -10,6 +10,7 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
 import { HealthController } from './routes/health/health.controller';
 import { AuthModule } from './routes/auth/auth.module';
 import { StaffModule } from './routes/staff/staff.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { StaffModule } from './routes/staff/staff.module';
     RpcClientsModule,
     AuthModule,
     StaffModule,
+    ProductsModule,
   ],
   controllers: [HealthController],
   providers: [JwtStrategy, { provide: APP_PIPE, useClass: ZodValidationPipe }],
