@@ -27,12 +27,16 @@ services:
       GATEWAY_PORT: 3000
       CORE_HOST: core
       CORE_TCP_PORT: 4001
+      PRODUCTS_HOST: products
+      PRODUCTS_TCP_PORT: 4002
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
       - "3000"
     depends_on:
       core:
+        condition: service_started
+      products:
         condition: service_started
     healthcheck:
       test:
@@ -64,6 +68,21 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
       - "4001"
+    networks: [backend]
+
+  products:
+    image: ${PRODUCTS_IMAGE:?PRODUCTS_IMAGE is required}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PRODUCTS_HOST: 0.0.0.0
+      PRODUCTS_TCP_PORT: 4002
+      PRODUCTS_DATABASE_URL: ${PRODUCTS_DATABASE_URL:?PRODUCTS_DATABASE_URL is required}
+      PRODUCTS_DIRECT_URL: ${PRODUCTS_DIRECT_URL:?PRODUCTS_DIRECT_URL is required}
+      PRODUCTS_DATABASE_POOL_MAX: ${PRODUCTS_DATABASE_POOL_MAX:-5}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    expose:
+      - "4002"
     networks: [backend]
 
 networks:

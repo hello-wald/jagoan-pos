@@ -14,6 +14,9 @@ const statusByCode: Record<string, HttpStatus> = {
   [AppErrorCode.USER_INACTIVE]: HttpStatus.FORBIDDEN,
   [AppErrorCode.USER_NOT_FOUND]: HttpStatus.NOT_FOUND,
   [AppErrorCode.CASHIER_NOT_FOUND]: HttpStatus.NOT_FOUND,
+  [AppErrorCode.PRODUCT_NOT_FOUND]: HttpStatus.NOT_FOUND,
+  [AppErrorCode.SKU_ALREADY_EXISTS]: HttpStatus.CONFLICT,
+  [AppErrorCode.PERMANENT_DELETE_FORBIDDEN]: HttpStatus.METHOD_NOT_ALLOWED,
 };
 
 /** Turns an RpcException payload from any service into an HTTP status. */
