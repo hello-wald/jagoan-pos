@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateCashierDto, SetCashierActiveDto } from './dto/staff.dto';
 import { Role } from 'generated/prisma/enums';
 import { RpcException } from '@nestjs/microservices';
