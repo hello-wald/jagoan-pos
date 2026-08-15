@@ -1,7 +1,7 @@
+# Node
 node_modules
-.DS_Store
 
-# Env files — every service has its own; none are tracked
+# Env
 .env
 .env.local
 apps/*/.env
@@ -16,3 +16,7 @@ apps/*/.env
 .claude/
 .windsurf/
 skills-lock.json
+
+# OS
+.DS_Store
+Thumbs.db
