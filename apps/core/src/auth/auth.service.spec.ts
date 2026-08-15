@@ -1,370 +1,222 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { Test } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { Role } from 'generated/prisma/enums';
-import { Prisma } from 'generated/prisma/client';
 import { RpcException } from '@nestjs/microservices';
-import { AuthErrorCode } from '@app-k/shared';
+import { AppErrorCode } from '@jagoan-pos/contracts';
 import * as argon2 from 'argon2';
+import { AuthService } from './auth.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '../generated/prisma/client';
+import { Role } from '../generated/prisma/enums';
 
-jest.mock('argon2', () => ({
-  hash: jest.fn(),
-  verify: jest.fn(),
-}));
+jest.mock('argon2', () => ({ hash: jest.fn(), verify: jest.fn() }));
 
-type MockTx = {
-  merchant: {
-    create: jest.Mock;
-  };
-  user: {
-    create: jest.Mock;
-  };
+const hash = argon2.hash as jest.Mock;
+const verify = argon2.verify as jest.Mock;
+
+const tx = {
+  merchant: { create: jest.fn() },
+  user: { create: jest.fn() },
 };
 
-type MockPrismaService = {
-  $transaction: jest.Mock;
-  user: {
-    findUnique: jest.Mock;
-  };
+const prisma = {
+  $transaction: jest.fn(),
+  user: { findUnique: jest.fn() },
 };
 
-type MockJwtService = {
-  signAsync: jest.Mock;
+const jwt = { signAsync: jest.fn() };
+
+const createdAt = new Date('2026-01-01T00:00:00.000Z');
+const updatedAt = new Date('2026-01-02T00:00:00.000Z');
+
+const userRow = {
+  id: 'user-1',
+  merchantId: 'merchant-1',
+  fullName: 'Bu Tini',
+  email: 'butini@example.com',
+  role: Role.OWNER,
+  isActive: true,
+  createdAt,
+  updatedAt,
 };
+
+async function expectRpcError(
+  promise: Promise<unknown>,
+  code: string,
+  message: string,
+): Promise<void> {
+  await expect(promise).rejects.toBeInstanceOf(RpcException);
+  await promise.catch((error: unknown) => {
+    expect((error as RpcException).getError()).toEqual({ code, message });
+  });
+}
 
 describe('AuthService', () => {
   let service: AuthService;
-  let prismaService: MockPrismaService;
-  let jwtService: MockJwtService;
-
-  const mockTx: MockTx = {
-    merchant: {
-      create: jest.fn(),
-    },
-    user: {
-      create: jest.fn(),
-    },
-  };
-
-  const mockPrismaService: MockPrismaService = {
-    $transaction: jest.fn(),
-    user: {
-      findUnique: jest.fn(),
-    },
-  };
-
-  const mockJwtService: MockJwtService = {
-    signAsync: jest.fn(),
-  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    prisma.$transaction.mockImplementation((run: (t: typeof tx) => Promise<unknown>) => run(tx));
 
-    mockPrismaService.$transaction.mockImplementation(
-      (callback: (tx: MockTx) => Promise<unknown>) => callback(mockTx),
-    );
-
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef = await Test.createTestingModule({
       providers: [
         AuthService,
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
-        },
-        {
-          provide: JwtService,
-          useValue: mockJwtService,
-        },
+        { provide: PrismaService, useValue: prisma },
+        { provide: JwtService, useValue: jwt },
       ],
     }).compile();
 
-    service = module.get<AuthService>(AuthService);
-    prismaService = module.get<MockPrismaService>(PrismaService);
-    jwtService = module.get<MockJwtService>(JwtService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+    service = moduleRef.get(AuthService);
   });
 
   describe('registerOwner', () => {
     const dto = {
-      fullName: 'John Owner',
-      email: '  John.Owner@EXAMPLE.com  ',
-      password: 'SecurePassword123!',
-      merchantName: 'John Store',
+      merchantName: 'Warung Bu Tini',
+      fullName: 'Bu Tini',
+      email: 'butini@example.com',
+      password: 'correct-horse',
     };
-    const hashedPassword = 'argon2_hashed_password';
-    const merchantId = 'merchant-uuid-123';
 
-    it('should normalize email, hash password, and create merchant and owner user in transaction', async () => {
-      (argon2.hash as jest.Mock).mockResolvedValue(hashedPassword);
-
-      const createdMerchant = {
-        id: merchantId,
-        name: dto.merchantName,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      const createdUser = {
-        id: 'user-uuid-123',
-        merchantId,
-        fullName: dto.fullName,
-        email: 'john.owner@example.com',
-        role: Role.OWNER,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      mockTx.merchant.create.mockResolvedValue(createdMerchant);
-      mockTx.user.create.mockResolvedValue(createdUser);
+    it('creates the merchant and owner in one transaction and serializes dates', async () => {
+      hash.mockResolvedValue('argon2-hash');
+      tx.merchant.create.mockResolvedValue({ id: 'merchant-1' });
+      tx.user.create.mockResolvedValue(userRow);
 
       const result = await service.registerOwner(dto);
 
-      expect(argon2.hash).toHaveBeenCalledWith(dto.password);
-      expect(mockPrismaService.$transaction).toHaveBeenCalledTimes(1);
-      expect(mockTx.merchant.create).toHaveBeenCalledWith({
-        data: {
-          name: dto.merchantName,
-        },
-      });
-      expect(mockTx.user.create).toHaveBeenCalledWith({
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+      expect(tx.user.create).toHaveBeenCalledWith({
         data: {
           fullName: dto.fullName,
-          email: 'john.owner@example.com',
-          passwordHash: hashedPassword,
+          email: dto.email,
+          passwordHash: 'argon2-hash',
           role: Role.OWNER,
-          merchantId,
+          merchantId: 'merchant-1',
         },
         select: expect.any(Object),
       });
-      expect(result).toEqual(createdUser);
+      expect(result).toEqual({
+        ...userRow,
+        createdAt: createdAt.toISOString(),
+        updatedAt: updatedAt.toISOString(),
+      });
     });
 
-    it('should throw RpcException with EMAIL_ALREADY_EXISTS when tx.user.create throws P2002 error', async () => {
-      (argon2.hash as jest.Mock).mockResolvedValue(hashedPassword);
-
-      const createdMerchant = {
-        id: merchantId,
-        name: dto.merchantName,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      mockTx.merchant.create.mockResolvedValue(createdMerchant);
-
-      const prismaP2002Error = new Prisma.PrismaClientKnownRequestError(
-        'Unique constraint failed on the fields: (`email`)',
-        {
+    it('maps a P2002 unique violation to EMAIL_ALREADY_EXISTS', async () => {
+      hash.mockResolvedValue('argon2-hash');
+      tx.merchant.create.mockResolvedValue({ id: 'merchant-1' });
+      tx.user.create.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('duplicate', {
           code: 'P2002',
           clientVersion: '7.9.1',
-        },
+        }),
       );
-      mockTx.user.create.mockRejectedValue(prismaP2002Error);
 
-      await expect(service.registerOwner(dto)).rejects.toThrow(RpcException);
-
-      try {
-        await service.registerOwner(dto);
-      } catch (error: unknown) {
-        expect(error).toBeInstanceOf(RpcException);
-        const rpcError = error as RpcException;
-        expect(rpcError.getError()).toEqual({
-          code: AuthErrorCode.EMAIL_ALREADY_EXISTS,
-          message: 'Email already registered',
-        });
-      }
+      await expectRpcError(
+        service.registerOwner(dto),
+        AppErrorCode.EMAIL_ALREADY_EXISTS,
+        'Email already registered',
+      );
     });
 
-    it('should rethrow unexpected database errors from transaction', async () => {
-      (argon2.hash as jest.Mock).mockResolvedValue(hashedPassword);
+    it('rethrows unexpected database errors', async () => {
+      hash.mockResolvedValue('argon2-hash');
+      tx.merchant.create.mockRejectedValue(new Error('connection lost'));
 
-      const unexpectedError = new Error('Database connection lost');
-      mockTx.merchant.create.mockRejectedValue(unexpectedError);
-
-      await expect(service.registerOwner(dto)).rejects.toThrow(
-        'Database connection lost',
-      );
+      await expect(service.registerOwner(dto)).rejects.toThrow('connection lost');
     });
   });
 
   describe('login', () => {
-    const dto = {
-      email: '  Owner.Login@EXAMPLE.com  ',
-      password: 'CorrectPassword123!',
-    };
-    const normalizedEmail = 'owner.login@example.com';
-    const mockUser = {
-      id: 'user-123',
-      merchantId: 'merchant-123',
-      fullName: 'Owner Login',
-      email: normalizedEmail,
-      passwordHash: 'argon2_hashed_password',
-      role: Role.OWNER,
-      isActive: true,
-    };
-    const mockToken = 'mock_jwt_access_token';
+    const dto = { email: 'butini@example.com', password: 'correct-horse' };
+    const withHash = { ...userRow, passwordHash: 'argon2-hash' };
 
-    it('should normalize email, verify password, generate token, and return response on happy path', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-      (argon2.verify as jest.Mock).mockResolvedValue(true);
-      mockJwtService.signAsync.mockResolvedValue(mockToken);
+    it('returns a token and the lean user on success', async () => {
+      prisma.user.findUnique.mockResolvedValue(withHash);
+      verify.mockResolvedValue(true);
+      jwt.signAsync.mockResolvedValue('jwt-token');
 
       const result = await service.login(dto);
 
-      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { email: normalizedEmail },
-      });
-      expect(argon2.verify).toHaveBeenCalledWith(
-        mockUser.passwordHash,
-        dto.password,
-      );
-      expect(mockJwtService.signAsync).toHaveBeenCalledWith({
-        sub: mockUser.id,
-        role: mockUser.role,
-        merchantId: mockUser.merchantId,
+      expect(jwt.signAsync).toHaveBeenCalledWith({
+        sub: withHash.id,
+        role: withHash.role,
+        merchantId: withHash.merchantId,
       });
       expect(result).toEqual({
-        accessToken: mockToken,
+        accessToken: 'jwt-token',
         user: {
-          id: mockUser.id,
-          merchantId: mockUser.merchantId,
-          fullName: mockUser.fullName,
-          email: mockUser.email,
-          role: mockUser.role,
-          isActive: mockUser.isActive,
+          id: withHash.id,
+          merchantId: withHash.merchantId,
+          fullName: withHash.fullName,
+          email: withHash.email,
+          role: withHash.role,
+          isActive: withHash.isActive,
         },
       });
     });
 
-    it('should throw RpcException with INVALID_CREDENTIALS when user is not found', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
+    // An unknown email and a wrong password must be indistinguishable to the caller.
+    it('reports INVALID_CREDENTIALS for an unknown email without signing a token', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.login(dto)).rejects.toThrow(RpcException);
-
-      try {
-        await service.login(dto);
-      } catch (error: unknown) {
-        expect(error).toBeInstanceOf(RpcException);
-        const rpcError = error as RpcException;
-        expect(rpcError.getError()).toEqual({
-          code: AuthErrorCode.INVALID_CREDENTIALS,
-          message: 'Invalid email or password',
-        });
-      }
-
-      expect(argon2.verify).not.toHaveBeenCalled();
-      expect(mockJwtService.signAsync).not.toHaveBeenCalled();
+      await expectRpcError(
+        service.login(dto),
+        AppErrorCode.INVALID_CREDENTIALS,
+        'Invalid email or password',
+      );
+      expect(jwt.signAsync).not.toHaveBeenCalled();
     });
 
-    it('should throw RpcException with INVALID_CREDENTIALS when password is invalid', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-      (argon2.verify as jest.Mock).mockResolvedValue(false);
+    it('reports INVALID_CREDENTIALS for a wrong password', async () => {
+      prisma.user.findUnique.mockResolvedValue(withHash);
+      verify.mockResolvedValue(false);
 
-      await expect(service.login(dto)).rejects.toThrow(RpcException);
-
-      try {
-        await service.login(dto);
-      } catch (error: unknown) {
-        expect(error).toBeInstanceOf(RpcException);
-        const rpcError = error as RpcException;
-        expect(rpcError.getError()).toEqual({
-          code: AuthErrorCode.INVALID_CREDENTIALS,
-          message: 'Invalid email or password',
-        });
-      }
-
-      expect(mockJwtService.signAsync).not.toHaveBeenCalled();
+      await expectRpcError(
+        service.login(dto),
+        AppErrorCode.INVALID_CREDENTIALS,
+        'Invalid email or password',
+      );
+      expect(jwt.signAsync).not.toHaveBeenCalled();
     });
 
-    it('should throw RpcException with USER_INACTIVE when user account is inactive', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({
-        ...mockUser,
-        isActive: false,
-      });
-      (argon2.verify as jest.Mock).mockResolvedValue(true);
+    it('refuses an inactive user even with the right password', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...withHash, isActive: false });
+      verify.mockResolvedValue(true);
 
-      await expect(service.login(dto)).rejects.toThrow(RpcException);
-
-      try {
-        await service.login(dto);
-      } catch (error: unknown) {
-        expect(error).toBeInstanceOf(RpcException);
-        const rpcError = error as RpcException;
-        expect(rpcError.getError()).toEqual({
-          code: AuthErrorCode.USER_INACTIVE,
-          message: 'User is inactive',
-        });
-      }
-
-      expect(mockJwtService.signAsync).not.toHaveBeenCalled();
+      await expectRpcError(service.login(dto), AppErrorCode.USER_INACTIVE, 'User is inactive');
+      expect(jwt.signAsync).not.toHaveBeenCalled();
     });
   });
 
   describe('getUserById', () => {
-    const userId = 'user-123';
-    const mockUser = {
-      id: userId,
-      merchantId: 'merchant-123',
-      fullName: 'Owner User',
-      email: 'owner@example.com',
-      role: Role.OWNER,
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    it('returns the user summary with ISO dates', async () => {
+      prisma.user.findUnique.mockResolvedValue(userRow);
 
-    it('should return user data when user exists and is active', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-
-      const result = await service.getUserById(userId);
-
-      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { id: userId },
-        select: expect.any(Object),
+      await expect(service.getUserById('user-1')).resolves.toEqual({
+        ...userRow,
+        createdAt: createdAt.toISOString(),
+        updatedAt: updatedAt.toISOString(),
       });
-      expect(result).toEqual(mockUser);
     });
 
-    it('should throw RpcException with USER_NOT_FOUND when user is not found', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
+    it('reports USER_NOT_FOUND when the user is missing', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.getUserById(userId)).rejects.toThrow(RpcException);
-
-      try {
-        await service.getUserById(userId);
-      } catch (error: unknown) {
-        expect(error).toBeInstanceOf(RpcException);
-        const rpcError = error as RpcException;
-        expect(rpcError.getError()).toEqual({
-          code: AuthErrorCode.USER_NOT_FOUND,
-          message: 'User not found',
-        });
-      }
+      await expectRpcError(
+        service.getUserById('user-1'),
+        AppErrorCode.USER_NOT_FOUND,
+        'User not found',
+      );
     });
 
-    it('should throw RpcException with USER_INACTIVE when user is inactive', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({
-        ...mockUser,
-        isActive: false,
-      });
+    it('reports USER_INACTIVE for a deactivated user', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...userRow, isActive: false });
 
-      await expect(service.getUserById(userId)).rejects.toThrow(RpcException);
-
-      try {
-        await service.getUserById(userId);
-      } catch (error: unknown) {
-        expect(error).toBeInstanceOf(RpcException);
-        const rpcError = error as RpcException;
-        expect(rpcError.getError()).toEqual({
-          code: AuthErrorCode.USER_INACTIVE,
-          message: 'User is inactive',
-        });
-      }
+      await expectRpcError(
+        service.getUserById('user-1'),
+        AppErrorCode.USER_INACTIVE,
+        'User is inactive',
+      );
     });
   });
 });

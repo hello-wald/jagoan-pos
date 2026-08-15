@@ -4,6 +4,7 @@ node_modules
 # Env
 .env
 .env.*
+!.env.example
 !deploy/gcp/.env.example
 apps/*/.env
 
@@ -12,10 +13,16 @@ apps/*/.env
 **/generated/
 *.tsbuildinfo
 
+# Test and runtime output
+coverage/
+*.log
+
 # AI tooling
 .agents/
 .claude/
 .windsurf/
+.superpowers/
+docs/superpowers/
 skills-lock.json
 
 # OS

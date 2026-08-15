@@ -1,16 +1,16 @@
 {
-  "name": "app-k",
+  "name": "jagoan-pos",
   "version": "1.0.0",
   "private": true,
-  "license": "UNLICENSED",
   "engines": { "node": ">=22.0.0" },
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "build:packages": "npm run build --workspace=@app-k/contracts --workspace=@app-k/shared --workspace=@app-k/redis",
+    "build:packages": "npm run build --workspace=@jagoan-pos/contracts --workspace=@jagoan-pos/shared --workspace=@jagoan-pos/redis",
     "build": "npm run build:packages && npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "format": "prettier --write \"{apps,packages}/**/*.ts\"",
+    "format:check": "prettier --check \"{apps,packages}/**/*.ts\"",
     "test": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
@@ -21,5 +21,5 @@
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
-  "repository": { "type": "git", "url": "git+https://github.com/SEA18-Team4/app-k.git" }
+  "repository": { "type": "git", "url": "git+https://github.com/SEA18-Team4/jagoan-pos.git" }
 }

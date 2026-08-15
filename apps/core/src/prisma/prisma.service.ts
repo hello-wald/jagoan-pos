@@ -1,31 +1,55 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from 'generated/prisma/client';
+import { PrismaClient } from '../generated/prisma/client';
+import type { CoreEnv } from '../config/env.schema';
+
+// Narrows the constructor generic so the `log` levels flow through to `$on`'s
+// event-name union; without it that generic defaults to `never` under strict.
+type PrismaServiceOptions = {
+  adapter: PrismaPg;
+  log: [
+    { emit: 'event'; level: 'query' },
+    { emit: 'event'; level: 'warn' },
+    { emit: 'event'; level: 'error' },
+  ];
+};
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleDestroy, OnModuleInit{
-    private logger = new Logger(PrismaService.name)
-    constructor(private readonly configService:ConfigService){
-        const adapter = new PrismaPg({ connectionString: configService.get<string>('CORE_DATABASE_URL') })
-        super({adapter})
-    }
+export class PrismaService
+  extends PrismaClient<PrismaServiceOptions>
+  implements OnModuleInit, OnModuleDestroy
+{
+  private readonly logger = new Logger(PrismaService.name);
 
-    async onModuleInit() {
-        try {
-            await this.$connect();
-            this.logger.log('Prisma successfully connected')
-        } catch (error) {
-            this.logger.error('Prisma error: ' + error)
-        }
+  constructor(config: ConfigService<CoreEnv, true>) {
+    const adapter = new PrismaPg({
+      connectionString: config.get('CORE_DATABASE_URL', { infer: true }),
+      // Bounded so the services cannot exhaust Postgres' connection limit between them.
+      max: config.get('CORE_DATABASE_POOL_MAX', { infer: true }),
+    });
 
-    }
+    super({
+      adapter,
+      log: [
+        { emit: 'event', level: 'query' },
+        { emit: 'event', level: 'warn' },
+        { emit: 'event', level: 'error' },
+      ],
+    });
+  }
 
-    async onModuleDestroy() {
-        await this.$disconnect()
-    }
+  async onModuleInit(): Promise<void> {
+    this.$on('query', (event) => this.logger.debug(`${event.duration}ms ${event.query}`));
+    this.$on('warn', (event) => this.logger.warn(event.message));
+    this.$on('error', (event) => this.logger.error(event.message));
 
+    // Fail the boot rather than continuing into a broken process.
+    await this.$connect();
+    this.logger.log('prisma connected');
+  }
 
-
-
+  async onModuleDestroy(): Promise<void> {
+    await this.$disconnect();
+  }
 }

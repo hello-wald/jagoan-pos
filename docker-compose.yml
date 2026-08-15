@@ -29,13 +29,14 @@ services:
     environment:
       NODE_ENV: production
       GATEWAY_PORT: 3000
-      CORE_HOST: core-service
+      CORE_HOST: core
       CORE_TCP_PORT: 4001
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
       - "3000"
     depends_on:
-      core-service:
+      core:
         condition: service_started
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
@@ -45,7 +46,7 @@ services:
       start_period: 15s
     networks: [backend]
 
-  core-service:
+  core:
     image: ${CORE_IMAGE:?CORE_IMAGE is required}
     restart: unless-stopped
     environment:
@@ -53,10 +54,12 @@ services:
       CORE_HOST: 0.0.0.0
       CORE_TCP_PORT: 4001
       CORE_DATABASE_URL: ${CORE_DATABASE_URL:?CORE_DATABASE_URL is required}
+      CORE_DIRECT_URL: ${CORE_DIRECT_URL:?CORE_DIRECT_URL is required}
+      CORE_DATABASE_POOL_MAX: ${CORE_DATABASE_POOL_MAX:-5}
+      REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL:?UPSTASH_REDIS_REST_URL is required}
-      UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN:?UPSTASH_REDIS_REST_TOKEN is required}
+      JWT_EXPIRES_IN_SECONDS: ${JWT_EXPIRES_IN_SECONDS:-3600}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
       - "4001"
     networks: [backend]

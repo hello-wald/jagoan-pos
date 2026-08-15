@@ -1,286 +1,186 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { StaffService } from './staff.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from '@app-k/redis';
-import { Role } from 'generated/prisma/enums';
-import { Prisma } from 'generated/prisma/client';
+import { Test } from '@nestjs/testing';
 import { RpcException } from '@nestjs/microservices';
-import { AuthErrorCode, redisKeys, StaffErrorCode } from '@app-k/shared';
+import { AppErrorCode } from '@jagoan-pos/contracts';
+import { cacheKeys } from '@jagoan-pos/shared';
+import { RedisService } from '@jagoan-pos/redis';
 import * as argon2 from 'argon2';
+import { StaffService } from './staff.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '../generated/prisma/client';
+import { Role } from '../generated/prisma/enums';
 
-jest.mock('argon2', () => ({
-  hash: jest.fn(),
-}));
+jest.mock('argon2', () => ({ hash: jest.fn() }));
 
-type MockPrismaService = {
+const hash = argon2.hash as jest.Mock;
+
+const prisma = {
   user: {
-    findMany: jest.Mock;
-    create: jest.Mock;
-    updateMany: jest.Mock;
-    findUnique: jest.Mock;
-  };
+    findMany: jest.fn(),
+    create: jest.fn(),
+    updateMany: jest.fn(),
+    findUniqueOrThrow: jest.fn(),
+  },
 };
 
-type MockRedisService = {
-  get: jest.Mock;
-  set: jest.Mock;
-  del: jest.Mock;
-};
+const redis = { get: jest.fn(), set: jest.fn(), del: jest.fn() };
+
+const merchantId = 'merchant-1';
+const createdAt = new Date('2026-01-01T00:00:00.000Z');
+const updatedAt = new Date('2026-01-02T00:00:00.000Z');
+
+function cashierRow(overrides: Partial<{ id: string; isActive: boolean }> = {}) {
+  return {
+    id: 'cashier-1',
+    merchantId,
+    fullName: 'Kasir Satu',
+    email: 'kasir1@example.com',
+    role: Role.CASHIER,
+    isActive: true,
+    createdAt,
+    updatedAt,
+    ...overrides,
+  };
+}
+
+function asSummary(row: ReturnType<typeof cashierRow>) {
+  return { ...row, createdAt: createdAt.toISOString(), updatedAt: updatedAt.toISOString() };
+}
+
+async function expectRpcError(
+  promise: Promise<unknown>,
+  code: string,
+  message: string,
+): Promise<void> {
+  await expect(promise).rejects.toBeInstanceOf(RpcException);
+  await promise.catch((error: unknown) => {
+    expect((error as RpcException).getError()).toEqual({ code, message });
+  });
+}
 
 describe('StaffService', () => {
   let service: StaffService;
 
-  const mockPrismaService: MockPrismaService = {
-    user: {
-      findMany: jest.fn(),
-      create: jest.fn(),
-      updateMany: jest.fn(),
-      findUnique: jest.fn(),
-    },
-  };
-
-  const mockRedisService: MockRedisService = {
-    get: jest.fn(),
-    set: jest.fn(),
-    del: jest.fn(),
-  };
-
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef = await Test.createTestingModule({
       providers: [
         StaffService,
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
-        },
-        {
-          provide: RedisService,
-          useValue: mockRedisService,
-        },
+        { provide: PrismaService, useValue: prisma },
+        { provide: RedisService, useValue: redis },
       ],
     }).compile();
 
-    service = module.get<StaffService>(StaffService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+    service = moduleRef.get(StaffService);
   });
 
   describe('getCashiers', () => {
-    const merchantId = 'merchant-123';
-
-    it('should return list of cashiers for given merchantId', async () => {
-      const mockCashiers = [
-        {
-          id: 'cashier-1',
-          merchantId,
-          fullName: 'John Cashier',
-          email: 'john@example.com',
-          role: Role.CASHIER,
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-
-      mockPrismaService.user.findMany.mockResolvedValue(mockCashiers);
+    it('scopes the query to the merchant and counts active vs inactive', async () => {
+      prisma.user.findMany.mockResolvedValue([
+        cashierRow(),
+        cashierRow({ id: 'cashier-2', isActive: false }),
+      ]);
 
       const result = await service.getCashiers(merchantId);
 
-      expect(mockPrismaService.user.findMany).toHaveBeenCalledWith({
-        where: {
-          role: Role.CASHIER,
-          merchantId,
-        },
-        select: expect.any(Object) as Prisma.UserSelect,
-        orderBy: {
-          createdAt: 'desc',
-        },
+      expect(prisma.user.findMany).toHaveBeenCalledWith({
+        where: { role: Role.CASHIER, merchantId },
+        select: expect.any(Object),
+        orderBy: { createdAt: 'desc' },
       });
-      expect(result).toEqual({
-        data: mockCashiers,
-        summary: {
-          total: 1,
-          active: 1,
-          inactive: 0,
-        },
-      });
+      expect(result.summary).toEqual({ total: 2, active: 1, inactive: 1 });
+      expect(result.data[0]).toEqual(asSummary(cashierRow()));
     });
 
-    it('should return an empty array if merchant has no cashiers', async () => {
-      mockPrismaService.user.findMany.mockResolvedValue([]);
+    it('returns a zeroed summary when the merchant has no cashiers', async () => {
+      prisma.user.findMany.mockResolvedValue([]);
 
-      const result = await service.getCashiers(merchantId);
-
-      expect(result).toEqual({
+      await expect(service.getCashiers(merchantId)).resolves.toEqual({
         data: [],
-        summary: {
-          total: 0,
-          active: 0,
-          inactive: 0,
-        },
+        summary: { total: 0, active: 0, inactive: 0 },
       });
-      expect(mockPrismaService.user.findMany).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('createCashier', () => {
-    const merchantId = 'merchant-123';
-    const dto = {
-      fullName: 'Jane Doe',
-      email: '  Jane.Doe@EXAMPLE.com  ',
-      password: 'StrongPassword123!',
-    };
-    const hashedPassword = 'argon2_hashed_password';
+    const dto = { fullName: 'Kasir Satu', email: 'kasir1@example.com', password: 'correct-horse' };
 
-    it('should normalize email, hash password, create cashier, and invalidate cache successfully', async () => {
-      (argon2.hash as jest.Mock).mockResolvedValue(hashedPassword);
-
-      const createdCashier = {
-        id: 'cashier-new',
-        merchantId,
-        fullName: dto.fullName,
-        email: 'jane.doe@example.com',
-        role: Role.CASHIER,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      mockPrismaService.user.create.mockResolvedValue(createdCashier);
+    it('hashes the password, creates the cashier and invalidates the list cache', async () => {
+      hash.mockResolvedValue('argon2-hash');
+      prisma.user.create.mockResolvedValue(cashierRow());
 
       const result = await service.createCashier(merchantId, dto);
 
-      expect(argon2.hash).toHaveBeenCalledWith(dto.password);
-      expect(mockPrismaService.user.create).toHaveBeenCalledWith({
+      expect(hash).toHaveBeenCalledWith(dto.password);
+      expect(prisma.user.create).toHaveBeenCalledWith({
         data: {
           merchantId,
           fullName: dto.fullName,
-          email: 'jane.doe@example.com',
-          passwordHash: hashedPassword,
+          email: dto.email,
+          passwordHash: 'argon2-hash',
           role: Role.CASHIER,
           isActive: true,
         },
-        select: expect.any(Object) as Prisma.UserSelect,
+        select: expect.any(Object),
       });
-      expect(mockRedisService.del).toHaveBeenCalledWith(
-        redisKeys.core.cashiers(merchantId),
-      );
-      expect(result).toEqual(createdCashier);
+      expect(redis.del).toHaveBeenCalledWith(cacheKeys.cashiers(merchantId));
+      expect(result).toEqual(asSummary(cashierRow()));
     });
 
-    it('should throw RpcException with EMAIL_ALREADY_EXISTS and not invalidate cache when Prisma throws P2002 error', async () => {
-      (argon2.hash as jest.Mock).mockResolvedValue(hashedPassword);
-
-      const prismaP2002Error = new Prisma.PrismaClientKnownRequestError(
-        'Unique constraint failed on the fields: (`email`)',
-        {
+    it('maps P2002 to EMAIL_ALREADY_EXISTS and leaves the cache intact', async () => {
+      hash.mockResolvedValue('argon2-hash');
+      prisma.user.create.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('duplicate', {
           code: 'P2002',
           clientVersion: '7.9.1',
-        },
+        }),
       );
 
-      mockPrismaService.user.create.mockRejectedValue(prismaP2002Error);
-
-      await expect(service.createCashier(merchantId, dto)).rejects.toThrow(
-        RpcException,
+      await expectRpcError(
+        service.createCashier(merchantId, dto),
+        AppErrorCode.EMAIL_ALREADY_EXISTS,
+        'Email already registered',
       );
-
-      try {
-        await service.createCashier(merchantId, dto);
-      } catch (error: unknown) {
-        expect(error).toBeInstanceOf(RpcException);
-        if (error instanceof RpcException) {
-          expect(error.getError()).toEqual({
-            code: AuthErrorCode.EMAIL_ALREADY_EXISTS,
-            message: 'Email already registered',
-          });
-        }
-      }
-
-      expect(mockRedisService.del).not.toHaveBeenCalled();
+      expect(redis.del).not.toHaveBeenCalled();
     });
 
-    it('should rethrow unexpected errors directly and not invalidate cache', async () => {
-      (argon2.hash as jest.Mock).mockResolvedValue(hashedPassword);
+    it('rethrows unexpected errors and leaves the cache intact', async () => {
+      hash.mockResolvedValue('argon2-hash');
+      prisma.user.create.mockRejectedValue(new Error('connection lost'));
 
-      const unexpectedError = new Error('Database connection failed');
-      mockPrismaService.user.create.mockRejectedValue(unexpectedError);
-
-      await expect(service.createCashier(merchantId, dto)).rejects.toThrow(
-        'Database connection failed',
-      );
-      expect(mockRedisService.del).not.toHaveBeenCalled();
+      await expect(service.createCashier(merchantId, dto)).rejects.toThrow('connection lost');
+      expect(redis.del).not.toHaveBeenCalled();
     });
   });
 
   describe('setCashierActive', () => {
-    const merchantId = 'merchant-123';
-    const cashierId = 'cashier-456';
-    const dto = { isActive: false };
+    const cashierId = 'cashier-1';
 
-    it('should update status, invalidate cache, and return updated cashier data', async () => {
-      mockPrismaService.user.updateMany.mockResolvedValue({ count: 1 });
+    it('updates within the merchant scope, invalidates the cache and returns the row', async () => {
+      prisma.user.updateMany.mockResolvedValue({ count: 1 });
+      prisma.user.findUniqueOrThrow.mockResolvedValue(cashierRow({ isActive: false }));
 
-      const updatedCashier = {
-        id: cashierId,
-        merchantId,
-        fullName: 'John Cashier',
-        email: 'john@example.com',
-        role: Role.CASHIER,
-        isActive: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const result = await service.setCashierActive(merchantId, cashierId, { isActive: false });
 
-      mockPrismaService.user.findUnique.mockResolvedValue(updatedCashier);
-
-      const result = await service.setCashierActive(merchantId, cashierId, dto);
-
-      expect(mockPrismaService.user.updateMany).toHaveBeenCalledWith({
-        where: {
-          id: cashierId,
-          merchantId,
-          role: Role.CASHIER,
-        },
-        data: {
-          isActive: false,
-        },
+      expect(prisma.user.updateMany).toHaveBeenCalledWith({
+        where: { id: cashierId, merchantId, role: Role.CASHIER },
+        data: { isActive: false },
       });
-      expect(mockRedisService.del).toHaveBeenCalledWith(
-        redisKeys.core.cashiers(merchantId),
-      );
-      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { id: cashierId },
-        select: expect.any(Object) as Prisma.UserSelect,
-      });
-      expect(result).toEqual(updatedCashier);
+      expect(redis.del).toHaveBeenCalledWith(cacheKeys.cashiers(merchantId));
+      expect(result).toEqual(asSummary(cashierRow({ isActive: false })));
     });
 
-    it('should throw RpcException with CASHIER_NOT_FOUND and not invalidate cache when updateMany count is 0', async () => {
-      mockPrismaService.user.updateMany.mockResolvedValue({ count: 0 });
+    // count === 0 also covers a cashier that belongs to another merchant.
+    it('reports CASHIER_NOT_FOUND and skips the cache when nothing matched', async () => {
+      prisma.user.updateMany.mockResolvedValue({ count: 0 });
 
-      await expect(
-        service.setCashierActive(merchantId, cashierId, dto),
-      ).rejects.toThrow(RpcException);
-
-      try {
-        await service.setCashierActive(merchantId, cashierId, dto);
-      } catch (error: unknown) {
-        expect(error).toBeInstanceOf(RpcException);
-        if (error instanceof RpcException) {
-          expect(error.getError()).toEqual({
-            code: StaffErrorCode.CASHIER_NOT_FOUND,
-            message: 'Cashier not found',
-          });
-        }
-      }
-
-      expect(mockRedisService.del).not.toHaveBeenCalled();
-      expect(mockPrismaService.user.findUnique).not.toHaveBeenCalled();
+      await expectRpcError(
+        service.setCashierActive(merchantId, cashierId, { isActive: false }),
+        AppErrorCode.CASHIER_NOT_FOUND,
+        'Cashier not found',
+      );
+      expect(redis.del).not.toHaveBeenCalled();
+      expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
     });
   });
 });

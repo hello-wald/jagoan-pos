@@ -1,28 +1,30 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { resolve } from 'node:path';
-import { AuthModule } from './auth/auth.module';
-import { StaffModule } from './staff/staff.module';
-import * as Joi from 'joi';
+import { APP_PIPE } from '@nestjs/core';
+import { LoggerModule } from 'nestjs-pino';
+import { ZodValidationPipe } from 'nestjs-zod';
+import { buildLoggerOptions, validateEnv } from '@jagoan-pos/shared';
+import { ENV_FILE_PATH, gatewayEnvSchema } from './config/env.schema';
+import { RpcClientsModule } from './clients/clients.module';
+import { JwtStrategy } from './common/strategies/jwt.strategy';
+import { HealthController } from './routes/health/health.controller';
+import { AuthModule } from './routes/auth/auth.module';
+import { StaffModule } from './routes/staff/staff.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, 
-      envFilePath: [resolve(process.cwd(),'../../.env')],
-      validationSchema: Joi.object({
-        GATEWAY_PORT: Joi.number().integer().min(1).max(65535).default(3000), 
-        CORE_HOST: Joi.string().default('localhost'),
-        CORE_TCP_PORT: Joi.number().integer().min(1).max(65535).default(4001),
-        JWT_SECRET: Joi.string().min(16).required()
-      })
+      isGlobal: true,
+      envFilePath: [ENV_FILE_PATH],
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
+      validate: validateEnv(gatewayEnvSchema),
     }),
+    LoggerModule.forRoot(buildLoggerOptions('api-gateway')),
+    RpcClientsModule,
     AuthModule,
-    StaffModule
+    StaffModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [HealthController],
+  providers: [JwtStrategy, { provide: APP_PIPE, useClass: ZodValidationPipe }],
 })
 export class AppModule {}
