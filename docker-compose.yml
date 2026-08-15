@@ -29,6 +29,8 @@ services:
       CORE_TCP_PORT: 4001
       PRODUCTS_HOST: products
       PRODUCTS_TCP_PORT: 4002
+      TRANSACTIONS_HOST: transactions
+      TRANSACTIONS_TCP_PORT: 4003
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
@@ -37,6 +39,8 @@ services:
       core:
         condition: service_started
       products:
+        condition: service_started
+      transactions:
         condition: service_started
     healthcheck:
       test:
@@ -83,6 +87,28 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
       - "4002"
+    networks: [backend]
+
+  transactions:
+    image: ${TRANSACTIONS_IMAGE:?TRANSACTIONS_IMAGE is required}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      TRANSACTIONS_HOST: 0.0.0.0
+      TRANSACTIONS_TCP_PORT: 4003
+      TRANSACTIONS_DATABASE_URL: ${TRANSACTIONS_DATABASE_URL:?TRANSACTIONS_DATABASE_URL is required}
+      TRANSACTIONS_DIRECT_URL: ${TRANSACTIONS_DIRECT_URL:?TRANSACTIONS_DIRECT_URL is required}
+      TRANSACTIONS_DATABASE_POOL_MAX: ${TRANSACTIONS_DATABASE_POOL_MAX:-5}
+      # Checkout resolves catalog prices synchronously over TCP.
+      PRODUCTS_HOST: products
+      PRODUCTS_TCP_PORT: 4002
+      PRODUCTS_RPC_TIMEOUT_MS: ${PRODUCTS_RPC_TIMEOUT_MS:-3000}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    expose:
+      - "4003"
+    depends_on:
+      products:
+        condition: service_started
     networks: [backend]
 
 networks:

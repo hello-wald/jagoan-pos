@@ -10,12 +10,24 @@
     "start:prod": "node dist/main",
     "test": "jest",
     "test:watch": "jest --watch",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:deploy": "prisma migrate deploy"
   },
   "dependencies": {
+    "@jagoan-pos/contracts": "^0.0.1",
+    "@jagoan-pos/shared": "^0.0.1",
     "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/microservices": "^11.1.28",
     "@nestjs/platform-express": "^11.0.1",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "dotenv": "^17.4.1",
+    "nestjs-pino": "^4.4.0",
+    "nestjs-zod": "^5.5.0",
+    "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -27,6 +39,7 @@
     "@types/node": "^24.0.0",
     "jest": "^30.0.0",
     "source-map-support": "^0.5.21",
+    "prisma": "^7.9.1",
     "ts-jest": "^29.2.5",
     "typescript": "^5.7.3"
   },
@@ -41,6 +54,9 @@
     "transform": {
       "^.+\\.ts$": "ts-jest"
     },
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    }
   }
 }

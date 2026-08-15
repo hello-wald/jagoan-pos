@@ -49,7 +49,10 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<LoginResult> {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+      include: { merchant: { select: { name: true } } },
+    });
 
     // Same error for an unknown email and a wrong password, so login cannot enumerate accounts.
     if (!user || !(await argon2.verify(user.passwordHash, dto.password))) {
@@ -74,6 +77,7 @@ export class AuthService {
       user: {
         id: user.id,
         merchantId: user.merchantId,
+        merchantName: user.merchant?.name ?? null,
         fullName: user.fullName,
         email: user.email,
         role: user.role,

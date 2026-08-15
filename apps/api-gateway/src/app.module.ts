@@ -11,6 +11,7 @@ import { HealthController } from './routes/health/health.controller';
 import { AuthModule } from './routes/auth/auth.module';
 import { StaffModule } from './routes/staff/staff.module';
 import { ProductsModule } from './products/products.module';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ProductsModule } from './products/products.module';
     AuthModule,
     StaffModule,
     ProductsModule,
+    TransactionsModule,
   ],
   controllers: [HealthController],
   providers: [JwtStrategy, { provide: APP_PIPE, useClass: ZodValidationPipe }],

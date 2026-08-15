@@ -1,14 +1,12 @@
 # Build from the repository root:
-# docker build -f apps/core/Dockerfile -t jagoan-pos/core:local .
+# docker build -f apps/transactions/Dockerfile -t jagoan-pos/transactions:local .
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends python3 make g++ openssl ca-certificates \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-# Manifests only, so the install layer is reused until a dependency actually changes.
-# npm ci validates the lockfile against every workspace, so all of them must be present.
 COPY package.json package-lock.json ./
 COPY apps/api-gateway/package.json apps/api-gateway/
 COPY apps/core/package.json apps/core/
@@ -21,11 +19,11 @@ RUN npm ci
 
 COPY tsconfig.base.json ./
 COPY packages ./packages
-COPY apps/core ./apps/core
+COPY apps/transactions ./apps/transactions
 
 RUN npm run build:packages \
-  && npm run prisma:generate --workspace=@jagoan-pos/core \
-  && npm run build --workspace=@jagoan-pos/core \
+  && npm run prisma:generate --workspace=@jagoan-pos/transactions \
+  && npm run build --workspace=@jagoan-pos/transactions \
   && npm prune --omit=dev
 
 FROM node:22-bookworm-slim AS runtime
@@ -37,10 +35,10 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/core ./apps/core
+COPY --from=builder /app/apps/transactions ./apps/transactions
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/package.json ./package.json
 
 USER node
-EXPOSE 4001
-CMD ["node", "apps/core/dist/main.js"]
+EXPOSE 4003
+CMD ["node", "apps/transactions/dist/main.js"]
