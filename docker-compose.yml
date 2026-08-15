@@ -1,9 +1,5 @@
 name: jagoan-pos
 
-# Production Compose for the GCE VM. The frontend is deployed separately to Vercel.
-# Copy deploy/gcp/.env.example to deploy/gcp/.env and run:
-# docker compose --env-file deploy/gcp/.env up -d
-
 services:
   caddy:
     image: caddy:2.10-alpine
@@ -39,7 +35,13 @@ services:
       core:
         condition: service_started
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
       interval: 15s
       timeout: 5s
       retries: 5

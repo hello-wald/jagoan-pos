@@ -2,15 +2,11 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
+import { defineConfig } from 'eslint/config';
 
-export default tseslint.config(
+export default defineConfig(
   {
-    ignores: [
-      '**/dist/**',
-      '**/generated/**',
-      '**/node_modules/**',
-      'apps/ai-analytics/**',
-    ],
+    ignores: ['**/dist/**', '**/generated/**', '**/node_modules/**', 'apps/ai-analytics/**'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
@@ -18,7 +14,7 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: { allowDefaultProject: ['*.mjs', '*.js'] },
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },

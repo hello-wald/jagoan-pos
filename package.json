@@ -2,8 +2,13 @@
   "name": "jagoan-pos",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": ">=22.0.0" },
-  "workspaces": ["apps/*", "packages/*"],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "build:packages": "npm run build --workspace=@jagoan-pos/contracts --workspace=@jagoan-pos/shared --workspace=@jagoan-pos/redis",
     "build": "npm run build:packages && npm run build --workspaces --if-present",
@@ -15,11 +20,15 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
+    "@types/node": "^24.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "prettier": "^3.4.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
-  "repository": { "type": "git", "url": "git+https://github.com/SEA18-Team4/jagoan-pos.git" }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hello-wald/jagoan-pos.git"
+  }
 }
