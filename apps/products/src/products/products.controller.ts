@@ -28,6 +28,13 @@ export class ProductsController {
     return this.productsService.getById(payload.id);
   }
 
+  @MessagePattern('products.getManyByIds')
+  getManyByIds(
+    @Payload() payload: ProductsRequest<'products.getManyByIds'>,
+  ): Promise<ProductsResponse<'products.getManyByIds'>> {
+    return this.productsService.getManyByIds(payload.ids);
+  }
+
   @MessagePattern('products.update')
   update(
     @Payload() payload: ProductsRequest<'products.update'>,

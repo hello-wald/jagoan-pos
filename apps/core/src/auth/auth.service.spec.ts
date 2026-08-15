@@ -28,6 +28,8 @@ const jwt = { signAsync: jest.fn() };
 const createdAt = new Date('2026-01-01T00:00:00.000Z');
 const updatedAt = new Date('2026-01-02T00:00:00.000Z');
 
+const merchantName = 'Warung Bu Tini';
+
 const userRow = {
   id: 'user-1',
   merchantId: 'merchant-1',
@@ -37,6 +39,19 @@ const userRow = {
   isActive: true,
   createdAt,
   updatedAt,
+  merchant: { name: merchantName },
+};
+
+const userSummary = {
+  id: userRow.id,
+  merchantId: userRow.merchantId,
+  merchantName,
+  fullName: userRow.fullName,
+  email: userRow.email,
+  role: userRow.role,
+  isActive: userRow.isActive,
+  createdAt: createdAt.toISOString(),
+  updatedAt: updatedAt.toISOString(),
 };
 
 async function expectRpcError(
@@ -94,11 +109,7 @@ describe('AuthService', () => {
         },
         select: expect.any(Object),
       });
-      expect(result).toEqual({
-        ...userRow,
-        createdAt: createdAt.toISOString(),
-        updatedAt: updatedAt.toISOString(),
-      });
+      expect(result).toEqual(userSummary);
     });
 
     it('maps a P2002 unique violation to EMAIL_ALREADY_EXISTS', async () => {
@@ -147,6 +158,7 @@ describe('AuthService', () => {
         user: {
           id: withHash.id,
           merchantId: withHash.merchantId,
+          merchantName,
           fullName: withHash.fullName,
           email: withHash.email,
           role: withHash.role,
@@ -192,10 +204,24 @@ describe('AuthService', () => {
     it('returns the user summary with ISO dates', async () => {
       prisma.user.findUnique.mockResolvedValue(userRow);
 
-      await expect(service.getUserById('user-1')).resolves.toEqual({
+      await expect(service.getUserById('user-1')).resolves.toEqual(userSummary);
+    });
+
+    // Checkout snapshots merchantName, so the admin case must be null rather
+    // than undefined or a crash on the missing relation.
+    it('reports a null merchantName for a user with no merchant', async () => {
+      prisma.user.findUnique.mockResolvedValue({
         ...userRow,
-        createdAt: createdAt.toISOString(),
-        updatedAt: updatedAt.toISOString(),
+        merchantId: null,
+        merchant: null,
+        role: Role.GLOBAL_ADMIN,
+      });
+
+      await expect(service.getUserById('user-1')).resolves.toEqual({
+        ...userSummary,
+        merchantId: null,
+        merchantName: null,
+        role: Role.GLOBAL_ADMIN,
       });
     });
 

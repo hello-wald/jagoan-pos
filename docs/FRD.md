@@ -40,7 +40,7 @@ One platform, many merchants. **Catalog and pricing are global and admin-owned.*
 
 | Actor                    | Scope                | Primary operations                                               | Access pattern                                            | Consistency need                                      |
 | ------------------------ | -------------------- | ---------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------- |
-| **Cashier**              | One merchant         | Scan, checkout, stock receive                                    | Frequent small writes + very frequent catalog reads       | Strong on stock & transactions                        |
+| **Cashier**              | One merchant         | Scan, checkout                                                   | Frequent small writes + very frequent catalog reads       | Strong on stock & transactions                        |
 | **Administrator**        | Platform-wide        | Manage catalog, prices, merchants, owner accounts                | Rare writes with platform-wide fan-out                    | Strong on write; bounded-stale propagation acceptable |
 | **Merchant Owner**       | One merchant         | View dashboard, reports, insights; manage cashiers; adjust stock | Bursty, expensive aggregate reads over history            | Eventual — seconds to minutes of staleness acceptable |
 | **AI Analytics Service** | One merchant per job | Read transaction history, call LLM, write Insight                | Long sequential reads, occasional writes, no user waiting | Eventual; explicitly not real-time                    |

@@ -11,6 +11,7 @@ export interface ProductsContract {
   'products.create': { request: CreateProductInput; response: Product };
   'products.list': { request: ProductListQuery; response: PaginatedProducts };
   'products.getById': { request: { id: string }; response: Product };
+  'products.getManyByIds': { request: { ids: string[] }; response: Product[] };
   'products.update': { request: { id: string; dto: UpdateProductInput }; response: Product };
   'products.setActive': {
     request: { id: string; dto: SetProductActiveInput };

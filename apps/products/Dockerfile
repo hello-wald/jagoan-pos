@@ -12,7 +12,6 @@ COPY apps/api-gateway/package.json apps/api-gateway/
 COPY apps/core/package.json apps/core/
 COPY apps/products/package.json apps/products/
 COPY apps/transactions/package.json apps/transactions/
-COPY apps/analytics-service/package.json apps/analytics-service/
 COPY packages/contracts/package.json packages/contracts/
 COPY packages/redis/package.json packages/redis/
 COPY packages/shared/package.json packages/shared/
