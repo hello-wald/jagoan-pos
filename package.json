@@ -1,25 +1,25 @@
 {
-	"name": "app-k",
-	"version": "1.0.0",
-	"description": "",
-	"private": true,
-	"workspaces": [
-		"apps/*",
-		"packages/*"
-	],
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/SEA18-Team4/app-k.git"
-	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
-	"type": "commonjs",
-	"bugs": {
-		"url": "https://github.com/SEA18-Team4/app-k/issues"
-	},
-	"homepage": "https://github.com/SEA18-Team4/app-k#readme"
+  "name": "app-k",
+  "version": "1.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": { "node": ">=22.0.0" },
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "build:packages": "npm run build --workspace=@app-k/contracts --workspace=@app-k/shared --workspace=@app-k/redis",
+    "build": "npm run build:packages && npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write \"{apps,packages}/**/*.ts\"",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
+  },
+  "repository": { "type": "git", "url": "git+https://github.com/SEA18-Team4/app-k.git" }
 }

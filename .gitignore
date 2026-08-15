@@ -1,12 +1,23 @@
+# Node
 node_modules
-.DS_Store
+
+# Env
 .env
 .env.*
 !deploy/gcp/.env.example
+apps/*/.env
+
+# Build output
 **/dist/
-docs/
+**/generated/
+*.tsbuildinfo
+
+# AI tooling
 .agents/
 .claude/
 .windsurf/
 skills-lock.json
-**/generated/
+
+# OS
+.DS_Store
+Thumbs.db
