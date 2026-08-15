@@ -10,7 +10,10 @@ export default tseslint.config(
   prettier,
   {
     languageOptions: {
-      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+      parserOptions: {
+        projectService: { allowDefaultProject: ['*.mjs', '*.js'] },
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
@@ -18,5 +21,13 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/consistent-type-imports': 'error',
     },
+  },
+  {
+    // Every package tsconfig excludes spec files so they stay out of dist, which
+    // puts them outside the project service. Lint them without type information
+    // and drop the rules that need it.
+    files: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
+    languageOptions: { parserOptions: { projectService: false, project: null } },
+    rules: { '@typescript-eslint/no-floating-promises': 'off' },
   },
 );

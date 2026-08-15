@@ -12,6 +12,10 @@ apps/*/.env
 **/generated/
 *.tsbuildinfo
 
+# Test and runtime output
+coverage/
+*.log
+
 # AI tooling
 .agents/
 .claude/
