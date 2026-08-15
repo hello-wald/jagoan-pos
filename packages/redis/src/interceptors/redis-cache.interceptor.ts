@@ -1,55 +1,48 @@
 import {
-    CallHandler,
-    ExecutionContext,
+  type CallHandler,
+  type ExecutionContext,
   Injectable,
   Logger,
-  NestInterceptor,
+  type NestInterceptor,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { type Observable, of, switchMap } from 'rxjs';
 import { RedisService } from '../redis.service';
-import { Observable, of, switchMap } from 'rxjs';
-import { CACHEABLE_KEY, CacheableOptions } from '../decorator/cacheable.decorator';
+import { CACHEABLE_KEY, type CacheableOptions } from '../decorator/cacheable.decorator';
 
 @Injectable()
-export class RedisCacheInterceptor implements NestInterceptor{
-    private readonly logger = new Logger(RedisCacheInterceptor.name);
-    constructor(
-        private readonly reflector: Reflector,
-        private readonly redisService: RedisService,
-    ){}
+export class RedisCacheInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(RedisCacheInterceptor.name);
 
-    async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
-        const options = this.reflector.get<CacheableOptions | undefined>(
-            CACHEABLE_KEY, 
-            context.getHandler()
-        )
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly redis: RedisService,
+  ) {}
 
-        if(!options){
-            return next.handle()
-        }
-
-        
-        const cacheKey = options.key(context)
-        if(!cacheKey){
-            return next.handle()
-        }
-        const ttlSeconds = options.ttlSeconds ?? 300
-        
-
-        const cachedData = await this.redisService.get(cacheKey)
-        if(cachedData !== null){
-            this.logger.log(`[Cache HIT] key: "${cacheKey}"`);
-            return of(cachedData)
-        }
-        this.logger.log(`[Cache MISS] key: "${cacheKey}"`);
-        return next.handle().pipe(
-            switchMap(async (response: unknown) => {
-                if (response !== undefined && response !== null) {
-                    await this.redisService.set(cacheKey, response, ttlSeconds);
-                    this.logger.log(`[Cache SET] key: "${cacheKey}" (TTL: ${ttlSeconds})`);
-                }
-                return response;
-        }),
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
+    const options = this.reflector.get<CacheableOptions | undefined>(
+      CACHEABLE_KEY,
+      context.getHandler(),
     );
+    if (!options) return next.handle();
+
+    const key = options.key(context);
+    if (!key) return next.handle();
+
+    const ttlSeconds = options.ttlSeconds ?? 300;
+    const cached = await this.redis.get(key);
+    if (cached !== null) {
+      this.logger.debug(`cache hit ${key}`);
+      return of(cached);
     }
+
+    return next.handle().pipe(
+      switchMap(async (response: unknown) => {
+        if (response !== undefined && response !== null) {
+          await this.redis.set(key, response, ttlSeconds);
+        }
+        return response;
+      }),
+    );
+  }
 }
