@@ -21,6 +21,8 @@ coverage/
 .agents/
 .claude/
 .windsurf/
+.superpowers/
+docs/superpowers/
 skills-lock.json
 
 # OS
