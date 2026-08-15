@@ -9,7 +9,7 @@ COPY package.json package-lock.json ./
 COPY apps ./apps
 COPY packages ./packages
 RUN npm ci \
-  && npm run build --workspace=@app-k/shared \
+  && npm run build --workspace=@jagoan-pos/shared \
   && cd apps/products-service && npx prisma generate \
   && cd /app && npm run build --workspace=products-service \
   && npm prune --omit=dev

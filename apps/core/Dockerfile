@@ -12,8 +12,8 @@ COPY apps ./apps
 COPY packages ./packages
 
 RUN npm ci \
-  && npm run build --workspace=@app-k/shared \
-  && npm run build --workspace=@app-k/redis \
+  && npm run build --workspace=@jagoan-pos/shared \
+  && npm run build --workspace=@jagoan-pos/redis \
   && cd apps/core && npx prisma generate \
   && cd /app && npm run build --workspace=core-service \
   && npm prune --omit=dev

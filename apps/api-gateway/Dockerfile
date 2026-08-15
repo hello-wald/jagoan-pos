@@ -6,7 +6,7 @@ COPY package.json package-lock.json ./
 COPY apps ./apps
 COPY packages ./packages
 RUN npm ci \
-  && npm run build --workspace=@app-k/shared \
+  && npm run build --workspace=@jagoan-pos/shared \
   && npm run build --workspace=api-gateway \
   && npm prune --omit=dev
 FROM node:22-bookworm-slim AS runtime
