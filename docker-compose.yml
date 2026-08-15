@@ -61,26 +61,6 @@ services:
       - "4001"
     networks: [backend]
 
-  # RabbitMQ remains private to the Docker network. Products, Transaction,
-  # Outbox Relay, and Analytics Worker will join this network when implemented.
-  rabbitmq:
-    image: rabbitmq:4.1-management-alpine
-    restart: unless-stopped
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?RABBITMQ_USER is required}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
-    expose:
-      - "5672"
-      - "15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    networks: [backend]
-
 networks:
   backend:
     driver: bridge
@@ -88,4 +68,3 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
-  rabbitmq_data:

@@ -1,8 +1,8 @@
 # GCE deployment
 
-This Compose stack deploys the API Gateway, Core Service, private RabbitMQ, and
-Caddy as the HTTPS reverse proxy. Supabase, Upstash Redis, ClickHouse Cloud,
-and the Vercel frontend remain external services.
+This Compose stack deploys the API Gateway, Core Service, and Caddy as the HTTPS
+reverse proxy. Supabase, Upstash Redis, CloudAMQP, ClickHouse Cloud, and the
+Vercel frontend remain external services.
 
 ## First deployment
 
@@ -29,5 +29,6 @@ and the Vercel frontend remain external services.
    curl -fsS https://API_DOMAIN/api/health
    ```
 
-Only ports 80 and 443 are public. Core TCP and RabbitMQ ports remain on the
-private Docker network.
+Only ports 80 and 443 are public. Core TCP remains on the private Docker
+network. CloudAMQP is reached through the TLS-protected `CLOUDAMQP_URL`; do not
+expose an AMQP broker from the VM.
