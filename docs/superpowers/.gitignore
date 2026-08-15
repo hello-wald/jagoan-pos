@@ -1,1 +1,11 @@
+# Superpowers scratch output is ignored by default, but plans are deliverables and
+# belong in version control. Without the re-includes below, `git add docs/` silently
+# skips this whole subtree — plan files then track only via `git add -f`, which is a
+# habit that eventually loses one.
+#
+# `!plans/` must come before `!plans/**`: git will not re-include a file inside an
+# excluded directory unless the directory itself is re-included first.
 *
+!.gitignore
+!plans/
+!plans/**

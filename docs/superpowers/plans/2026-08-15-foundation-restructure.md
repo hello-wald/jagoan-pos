@@ -683,7 +683,7 @@ node --input-type=module -e "
   console.log(Object.keys(AppErrorCode).length);
 "
 ```
-Expected: `true`, then `10`.
+Expected: `true`, then `9`.
 
 The message-pattern strings never appear in this output: `CoreContract` is a TypeScript `interface`, so it is erased at compile time and contributes nothing to the frontend bundle. That is why the whole package can be shared rather than split into public and private halves.
 
