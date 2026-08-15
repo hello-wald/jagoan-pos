@@ -26,9 +26,6 @@ export default tseslint.config(
     },
   },
   {
-    // Every package tsconfig excludes spec files so they stay out of dist, which
-    // puts them outside the project service. Lint them without type information
-    // and drop the rules that need it.
     files: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
     languageOptions: { parserOptions: { projectService: false, project: null } },
     rules: { '@typescript-eslint/no-floating-promises': 'off' },
