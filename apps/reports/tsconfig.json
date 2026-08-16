@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "types": ["jest", "node"],
+    // Jest rootDir is "." here (specs live under both src/ and scripts/), so
+    // ts-jest picks up this tsconfig and its nodenext module kind, which it
+    // only supports under isolatedModules.
+    "isolatedModules": true
+  },
+  "include": ["scripts/**/*.ts", "src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

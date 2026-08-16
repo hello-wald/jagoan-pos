@@ -10,7 +10,9 @@ RUN apt-get update \
 COPY package.json package-lock.json ./
 COPY apps/api-gateway/package.json apps/api-gateway/
 COPY apps/core/package.json apps/core/
+COPY apps/outbox-relay/package.json apps/outbox-relay/
 COPY apps/products/package.json apps/products/
+COPY apps/reports/package.json apps/reports/
 COPY apps/transactions/package.json apps/transactions/
 COPY packages/contracts/package.json packages/contracts/
 COPY packages/redis/package.json packages/redis/

@@ -11,6 +11,7 @@ import { HealthController } from './routes/health/health.controller';
 import { AuthModule } from './routes/auth/auth.module';
 import { StaffModule } from './routes/staff/staff.module';
 import { ProductsModule } from './products/products.module';
+import { ReportsModule } from './reports/reports.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 
@@ -28,6 +29,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AuthModule,
     StaffModule,
     ProductsModule,
+    ReportsModule,
     TransactionsModule,
   ],
   controllers: [HealthController],
