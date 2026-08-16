@@ -122,8 +122,7 @@ export class SalesService {
 
     await tx.outboxEvent.create({
       data: {
-        aggregateType: 'sale',
-        aggregateId: sale.id,
+        saleId: sale.id,
         merchantId: input.merchantId,
         eventType: SALE_COMPLETED_EVENT,
         payload: this.buildEventPayload(sale),

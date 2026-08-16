@@ -330,8 +330,7 @@ describe('SalesService', () => {
       expect(tx.outboxEvent.create).toHaveBeenCalledTimes(1);
       expect(tx.outboxEvent.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          aggregateType: 'sale',
-          aggregateId: 'sale-1',
+          saleId: 'sale-1',
           merchantId: MERCHANT_ID,
           eventType: 'SALE_COMPLETED',
         }),
