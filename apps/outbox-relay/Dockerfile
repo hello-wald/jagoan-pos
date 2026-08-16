@@ -1,10 +1,12 @@
 # Build from the repository root:
-# docker build -f apps/api-gateway/Dockerfile -t jagoan-pos/api-gateway:local .
+# docker build -f apps/outbox-relay/Dockerfile -t jagoan-pos/outbox-relay:local .
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 
-# Manifests only, so the install layer is reused until a dependency actually changes.
-# npm ci validates the lockfile against every workspace, so all of them must be present.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json ./
 COPY apps/api-gateway/package.json apps/api-gateway/
 COPY apps/core/package.json apps/core/
@@ -18,21 +20,26 @@ RUN npm ci
 
 COPY tsconfig.base.json ./
 COPY packages ./packages
-COPY apps/api-gateway ./apps/api-gateway
+COPY apps/outbox-relay ./apps/outbox-relay
 
+# No prisma:generate — the relay reaches the outbox through pg, not Prisma.
 RUN npm run build:packages \
-  && npm run build --workspace=@jagoan-pos/api-gateway \
+  && npm run build --workspace=@jagoan-pos/outbox-relay \
   && npm prune --omit=dev
 
 FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/api-gateway ./apps/api-gateway
+COPY --from=builder /app/apps/outbox-relay ./apps/outbox-relay
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/package.json ./package.json
 
 USER node
-EXPOSE 3000
-CMD ["node", "apps/api-gateway/dist/main.js"]
+# No EXPOSE: the relay serves nothing, it only polls and publishes.
+CMD ["node", "apps/outbox-relay/dist/main.js"]

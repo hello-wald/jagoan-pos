@@ -8,8 +8,8 @@ services:
       API_DOMAIN: ${API_DOMAIN:?API_DOMAIN is required}
       CADDY_EMAIL: ${CADDY_EMAIL:?CADDY_EMAIL is required}
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - ./deploy/gcp/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -34,7 +34,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
-      - "3000"
+      - '3000'
     depends_on:
       core:
         condition: service_started
@@ -45,9 +45,9 @@ services:
     healthcheck:
       test:
         [
-          "CMD",
-          "node",
-          "-e",
+          'CMD',
+          'node',
+          '-e',
           "fetch('http://127.0.0.1:3000/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
         ]
       interval: 15s
@@ -71,7 +71,7 @@ services:
       JWT_EXPIRES_IN_SECONDS: ${JWT_EXPIRES_IN_SECONDS:-3600}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
-      - "4001"
+      - '4001'
     networks: [backend]
 
   products:
@@ -86,7 +86,7 @@ services:
       PRODUCTS_DATABASE_POOL_MAX: ${PRODUCTS_DATABASE_POOL_MAX:-5}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
-      - "4002"
+      - '4002'
     networks: [backend]
 
   transactions:
@@ -105,9 +105,28 @@ services:
       PRODUCTS_RPC_TIMEOUT_MS: ${PRODUCTS_RPC_TIMEOUT_MS:-3000}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
-      - "4003"
+      - '4003'
     depends_on:
       products:
+        condition: service_started
+    networks: [backend]
+
+  outbox-relay:
+    image: ${OUTBOX_RELAY_IMAGE:?OUTBOX_RELAY_IMAGE is required}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      TRANSACTIONS_DATABASE_URL: ${TRANSACTIONS_DATABASE_URL:?TRANSACTIONS_DATABASE_URL is required}
+      OUTBOX_DATABASE_POOL_MAX: ${OUTBOX_DATABASE_POOL_MAX:-2}
+      RABBITMQ_URL: ${RABBITMQ_URL:?RABBITMQ_URL is required}
+      OUTBOX_POLL_INTERVAL_MS: ${OUTBOX_POLL_INTERVAL_MS:-2000}
+      OUTBOX_BATCH_SIZE: ${OUTBOX_BATCH_SIZE:-100}
+      OUTBOX_MAX_ATTEMPTS: ${OUTBOX_MAX_ATTEMPTS:-5}
+      OUTBOX_MAX_BACKOFF_MS: ${OUTBOX_MAX_BACKOFF_MS:-60000}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    # No expose: the relay listens on nothing.
+    depends_on:
+      transactions:
         condition: service_started
     networks: [backend]
 

@@ -64,7 +64,6 @@ export class SalesService {
     }
   }
 
-  /** Stock, sale, movements and the outbox event all land together or not at all (FRD §7.1). */
   private async commitSale(
     tx: Prisma.TransactionClient,
     input: CheckoutInput,
