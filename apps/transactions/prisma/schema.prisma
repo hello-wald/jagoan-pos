@@ -72,6 +72,8 @@ model Sale {
   createdAt            DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   items                SaleItem[]
 
+  outboxEvents         OutboxEvent[]
+
   @@unique([merchantId, transactionNumber])
   @@unique([merchantId, idempotencyKey])
   @@index([merchantId, createdAt])
@@ -96,21 +98,32 @@ model SaleItem {
   @@map("sale_items")
 }
 
+enum OutboxStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+
+  @@map("outbox_status")
+}
+
 /// Transactional outbox.
 model OutboxEvent {
-  id            String   @id @default(uuid()) @db.Uuid
-  aggregateType String   @default("sale") @map("aggregate_type") @db.VarChar(50)
-  aggregateId   String   @map("aggregate_id") @db.Uuid
-  /// Kafka partition key: per-merchant ordering downstream.
-  merchantId    String   @map("merchant_id") @db.Uuid
-  eventType     String   @map("event_type") @db.VarChar(100)
-  eventVersion  Int      @default(1) @map("event_version")
-  payload       Json     @db.JsonB
-  traceId       String?  @map("trace_id") @db.VarChar(64)
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id          String       @id @default(uuid()) @db.Uuid
+  saleId      String       @map("sale_id") @db.Uuid
+  merchantId  String       @map("merchant_id") @db.Uuid
+  eventType   String       @map("event_type") @db.VarChar(100)
+  payload     Json         @db.JsonB
+  status      OutboxStatus @default(PENDING)
+  publishedAt DateTime?    @map("published_at") @db.Timestamptz(6)
+  attempts    Int          @default(0)
+  lastError   String?      @map("last_error") @db.VarChar(500)
+  traceId     String?      @map("trace_id") @db.VarChar(64)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  sale        Sale         @relation(fields: [saleId], references: [id], onDelete: Restrict)
 
-  @@index([aggregateId])
-  @@index([createdAt])
+  /// A sale emits at most one event per type 
+  @@unique([saleId, eventType])
+  @@index([status, createdAt])
   @@map("outbox_events")
 }
 
