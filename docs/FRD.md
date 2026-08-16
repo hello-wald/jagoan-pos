@@ -53,15 +53,15 @@ One platform, many merchants. **Catalog and pricing are global and admin-owned.*
 
 ### 3.1 Permission matrix
 
-| Resource                    | Cashier                                 | Merchant Owner                               | Administrator                |
-| --------------------------- | --------------------------------------- | -------------------------------------------- | ---------------------------- |
-| Catalog item & price        | read                                    | read                                         | create · update · deactivate |
-| Stock record (own merchant) | read · adjust · auto-decrement via sale | read · adjust                                | read (all merchants)         |
-| Transaction                 | create · read own shift                 | read (own merchant)                          | read (all merchants)         |
-| Report / dashboard          | —                                       | read (own merchant)                          | read (all merchants)         |
-| Insight                     | —                                       | request · read (own merchant)                | read (all merchants)         |
-| User account                | read own profile                        | create · deactivate cashiers of own merchant | manage owners & admins       |
-| Merchant                    | read own                                | read own                                     | create · suspend             |
+| Resource                    | Cashier                        | Merchant Owner                               | Administrator                |
+| --------------------------- | ------------------------------ | -------------------------------------------- | ---------------------------- |
+| Catalog item & price        | read                           | read                                         | create · update · deactivate |
+| Stock record (own merchant) | read · auto-decrement via sale | read · adjust                                | read (all merchants)         |
+| Transaction                 | create · read own transactions | read (own merchant)                          | read (all merchants)         |
+| Report / dashboard          | —                              | read (own merchant)                          | read (all merchants)         |
+| Insight                     | —                              | request · read (own merchant)                | read (all merchants)         |
+| User account                | read own profile               | create · deactivate cashiers of own merchant | manage owners & admins       |
+| Merchant                    | read own                       | read own                                     | create · suspend             |
 
 ### 3.2 Access rules
 
@@ -69,7 +69,8 @@ One platform, many merchants. **Catalog and pricing are global and admin-owned.*
 - **AR-2** Tenant scoping is enforced at the data-access layer, not in controllers. A query for merchant data without a `merchant_id` filter must be impossible to express.
 - **AR-3** A Cashier may only act within the merchant they belong to. Cross-merchant access returns 404, not 403 (no existence leakage).
 - **AR-4** Administrators cannot create transactions or adjust stock; they are catalog and platform operators, not merchant operators.
-- **AR-5** A deactivated user's active sessions are invalidated at next request.
+
+<!-- - **AR-5** A deactivated user's active sessions are invalidated at next request. -->
 
 ---
 
@@ -161,7 +162,7 @@ _Business rule:_ Transactions are append-only. Corrections are out of scope this
 
 ### E4 — Per-merchant inventory
 
-**US-4.1** As a Cashier, I want to record received goods, so that stock reflects the delivery.
+**US-4.1** As a Merchant Owner, I want to record received goods, so that stock reflects the delivery.
 
 - Given a positive quantity, then the stock record increases and a stock movement is logged with actor, timestamp, and reason.
 
