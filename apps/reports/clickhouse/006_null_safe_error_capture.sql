@@ -1,9 +1,6 @@
--- Second half of the Nullable fix. 005 corrected the WHERE clauses; the SELECT
--- list still read _raw_message and _error straight into non-nullable String
--- columns. A malformed message would then fail the very insert meant to record
--- it, losing the diagnostic exactly when it is needed.
---
--- 004 is corrected at source too, so this is a no-op replay on a fresh setup.
+-- Second half of the Nullable fix: 005 corrected the WHERE clauses, the SELECT
+-- still read Nullable virtuals into non-nullable columns, so a bad message would
+-- fail the very insert meant to record it. 004 is fixed at source.
 DROP VIEW IF EXISTS sale_events_errors_mv
 ;
 

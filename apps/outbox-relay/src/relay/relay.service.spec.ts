@@ -32,10 +32,7 @@ function storedRow(id: string, overrides: Partial<StoredRow> = {}): StoredRow {
   };
 }
 
-/**
- * Stands in for the table rather than for the repository, so assertions can be
- * about resulting row state instead of which method was called.
- */
+// Stands in for the table, so assertions are about row state, not calls made.
 class FakeOutbox extends OutboxRepository {
   constructor(public rows: StoredRow[]) {
     super();
@@ -61,7 +58,7 @@ class FakeOutbox extends OutboxRepository {
   ): Promise<void> {
     const row = this.rows.find((candidate) => candidate.id === id);
     if (!row) return;
-    // Mirrors the SQL: both `attempts` references read the pre-update value.
+    // Mirrors the SQL: both `attempts` refs read the pre-update value.
     if (row.attempts + 1 >= maxAttempts) row.status = 'FAILED';
     row.attempts += 1;
     row.lastError = error;
@@ -123,7 +120,7 @@ describe('RelayService.tick', () => {
       traceId: null,
     });
     expect(event.payload).toBeUndefined();
-    // The consumer reads JSONEachRow, so the envelope has to survive a round trip.
+    // The envelope has to survive a JSON round trip.
     expect(() => JSON.stringify(event)).not.toThrow();
   });
 
@@ -137,7 +134,7 @@ describe('RelayService.tick', () => {
     expect(result).toEqual({ claimed: 2, published: 0, failed: 0, brokerDown: true });
     expect(outbox.byId('row-1')).toMatchObject({ status: 'PENDING', attempts: 0, lastError: null });
     expect(outbox.byId('row-2')).toMatchObject({ status: 'PENDING', attempts: 0 });
-    // It stops at the first outage instead of walking the rest of the batch.
+    // Stops at the first outage rather than walking the batch.
     expect(publish).toHaveBeenCalledTimes(1);
   });
 
@@ -151,7 +148,7 @@ describe('RelayService.tick', () => {
     const result = await buildRelay(outbox, publish).tick();
 
     expect(result).toMatchObject({ published: 1, brokerDown: true });
-    // Rolling these back would republish a message the broker already accepted.
+    // Rolling back would republish a message the broker already took.
     expect(outbox.byId('row-1').status).toBe('PUBLISHED');
     expect(outbox.byId('row-2')).toMatchObject({ status: 'PENDING', attempts: 0 });
   });
@@ -177,7 +174,7 @@ describe('RelayService.tick', () => {
     await buildRelay(outbox, publish).tick();
 
     expect(outbox.byId('row-1')).toMatchObject({ status: 'FAILED', attempts: MAX_ATTEMPTS });
-    // FAILED drops out of the scan, so a poison message cannot hot-loop.
+    // FAILED drops out of the scan, so a poison message cannot loop.
     expect(await outbox.claimPending({} as PoolClient, 100)).toHaveLength(0);
   });
 

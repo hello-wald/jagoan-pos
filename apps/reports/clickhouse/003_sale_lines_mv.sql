@@ -1,15 +1,6 @@
--- Fans each sale's items[] into one row per line and casts the String-typed
--- wire fields into their real types.
---
--- This MV is incremental, which is correct HERE because it is a straight row
--- copy — no aggregation. Incremental MVs must NOT be used for rollups off this
--- table: they fire per inserted block and never observe ReplacingMergeTree's
--- dedup, so a redelivered message would permanently inflate any SUM. Rollups
--- belong in refreshable views running FINAL.
---
--- `item.x` is tuple-element access and `id` is the top-level column, so the two
--- `id`s do not collide. Rows that failed to parse are excluded here and picked
--- up by 004 instead.
+-- Fans items[] into one row per line and casts the String wire fields.
+-- Incremental is fine here (row copy, no aggregation) but NOT for rollups.
+-- `item.x` is tuple access, `id` is the top-level column, so the two do not clash.
 CREATE MATERIALIZED VIEW IF NOT EXISTS sale_lines_mv TO sale_lines AS
 SELECT
     toUUID(item.id)        AS sale_item_id,
@@ -41,7 +32,6 @@ SELECT
     now64(3)               AS ingested_at
 FROM sale_events_queue
 ARRAY JOIN items AS item
--- _error is Nullable(String) and is NULL (not '') on success. A bare
--- `_error = ''` evaluates to NULL for every good message, which silently
--- discards the entire stream, so the NULL case must be handled explicitly.
+-- _error is Nullable and NULL (not '') on success; a bare `_error = ''` is NULL
+-- for every good message and silently discards the whole stream.
 WHERE ifNull(_error, '') = '';

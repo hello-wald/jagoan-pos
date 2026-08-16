@@ -5,6 +5,8 @@ export * from './core/staff.schema';
 export * from './core/core.contract';
 export * from './products/product.schema';
 export * from './products/products.contract';
+export * from './reports/report.schema';
+export * from './reports/reports.contract';
 export * from './transactions/sale.schema';
 export * from './transactions/sale-event.schema';
 export * from './transactions/transactions.contract';

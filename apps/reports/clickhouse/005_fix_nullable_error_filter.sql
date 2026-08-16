@@ -1,13 +1,7 @@
--- Repairs environments that already applied 003/004 with the broken filter.
---
--- The original views filtered on `_error = ''` / `_error != ''`. `_error` is
--- Nullable(String) and is NULL on a successfully parsed message, so both
--- comparisons yielded NULL rather than true/false and every row was dropped by
--- both views at once — an empty sale_lines AND an empty sale_events_errors,
--- with no exception anywhere to point at the cause.
---
--- 003 and 004 are also corrected at source, so a fresh environment gets the
--- right definition first and this file is a harmless no-op replay.
+-- Repairs environments that applied 003/004 with `_error = ''` / `!= ''`.
+-- _error is Nullable and NULL on success, so both comparisons yielded NULL and
+-- every row was dropped by both views at once, with no exception anywhere.
+-- 003/004 are fixed at source, so this is a no-op replay on a fresh setup.
 DROP VIEW IF EXISTS sale_lines_mv
 ;
 

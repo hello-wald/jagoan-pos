@@ -31,6 +31,8 @@ services:
       PRODUCTS_TCP_PORT: 4002
       TRANSACTIONS_HOST: transactions
       TRANSACTIONS_TCP_PORT: 4003
+      REPORTS_HOST: reports
+      REPORTS_TCP_PORT: 4004
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
@@ -41,6 +43,8 @@ services:
       products:
         condition: service_started
       transactions:
+        condition: service_started
+      reports:
         condition: service_started
     healthcheck:
       test:
@@ -128,6 +132,25 @@ services:
     depends_on:
       transactions:
         condition: service_started
+    networks: [backend]
+
+  # Read-only query API over ClickHouse. Owns no database and reaches no other
+  # service, so it can be restarted or scaled without touching the write path.
+  reports:
+    image: ${REPORTS_IMAGE:?REPORTS_IMAGE is required}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      REPORTS_HOST: 0.0.0.0
+      REPORTS_TCP_PORT: 4004
+      CLICKHOUSE_URL: ${CLICKHOUSE_URL:?CLICKHOUSE_URL is required}
+      CLICKHOUSE_DATABASE: ${CLICKHOUSE_DATABASE:-default}
+      CLICKHOUSE_USERNAME: ${CLICKHOUSE_USERNAME:-default}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?CLICKHOUSE_PASSWORD is required}
+      CLICKHOUSE_QUERY_TIMEOUT_MS: ${CLICKHOUSE_QUERY_TIMEOUT_MS:-10000}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    expose:
+      - '4004'
     networks: [backend]
 
 networks:

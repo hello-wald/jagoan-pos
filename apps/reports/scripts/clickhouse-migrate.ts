@@ -1,12 +1,12 @@
-/**
- * Applies apps/reports/clickhouse/*.sql to ClickHouse in filename order, once
- * each, tracking what ran in a `schema_migrations` table.
- */
+// Applies clickhouse/*.sql in filename order, once each, tracked in
+// schema_migrations. DDL is not transactional: stop at the first failure and
+// re-run after fixing.
 import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { config as loadEnvFile } from 'dotenv';
 import { createClient } from '@clickhouse/client';
 import { z } from 'zod';
+import { brokerPlaceholders, redact, statementsIn, substitute } from './migrate-helpers';
 
 const ENV_FILE_PATH = resolve(__dirname, '..', '..', '..', '.env');
 const MIGRATIONS_DIR = resolve(__dirname, '..', 'clickhouse');
@@ -18,54 +18,6 @@ const envSchema = z.object({
   CLICKHOUSE_PASSWORD: z.string(),
   RABBITMQ_URL: z.string().startsWith('amqp', 'must be an amqp:// or amqps:// url'),
 });
-
-/** ClickHouse wants the broker split into parts, not a URL. */
-function brokerPlaceholders(rabbitmqUrl: string): Record<string, string> {
-  const url = new URL(rabbitmqUrl);
-  const secure = url.protocol === 'amqps:';
-  const port = url.port || (secure ? '5671' : '5672');
-  // CloudAMQP encodes the vhost in the path; an empty path means the default '/'.
-  const vhost = decodeURIComponent(url.pathname.replace(/^\//, '')) || '/';
-
-  return {
-    RABBITMQ_HOST_PORT: `${url.hostname}:${port}`,
-    RABBITMQ_SECURE: secure ? '1' : '0',
-    RABBITMQ_VHOST: vhost,
-    RABBITMQ_USERNAME: decodeURIComponent(url.username),
-    RABBITMQ_PASSWORD: decodeURIComponent(url.password),
-  };
-}
-
-/**
- * The broker password is inlined into the RabbitMQ engine DDL, and ClickHouse
- * echoes the offending query back in its error text. Without this, a single
- * failed migration prints the credential to the console and into CI logs.
- */
-function redact(text: string, secrets: string[]): string {
-  return secrets
-    .filter((secret) => secret.length > 0)
-    .reduce((scrubbed, secret) => scrubbed.split(secret).join('«redacted»'), text);
-}
-
-function substitute(sql: string, values: Record<string, string>): string {
-  return sql.replace(/\{\{(\w+)\}\}/g, (_match, key: string) => {
-    const value = values[key];
-    if (value === undefined) throw new Error(`No value for placeholder {{${key}}}`);
-    // These land inside single-quoted SQL literals.
-    return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  });
-}
-
-/**
- * Splits on a semicolon that ends a line. Safe for this DDL, which has no
- * semicolons inside string literals.
- */
-function statementsIn(sql: string): string[] {
-  return sql
-    .split(/;\s*(?:\r?\n|$)/)
-    .map((statement) => statement.trim())
-    .filter((statement) => statement.length > 0 && !/^(--[^\n]*\s*)+$/.test(statement));
-}
 
 async function main(): Promise<void> {
   loadEnvFile({ path: ENV_FILE_PATH });

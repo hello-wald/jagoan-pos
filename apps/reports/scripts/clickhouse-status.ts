@@ -47,6 +47,21 @@ async function main(): Promise<void> {
        FROM system.rabbitmq_consumers`,
   );
 
+  await ask(
+    'refreshable rollups',
+    `SELECT view, status, toString(last_success_time) AS last_success,
+            toString(next_refresh_time) AS next_refresh, exception
+       FROM system.view_refreshes ORDER BY view`,
+  );
+
+  await ask(
+    'rollup row counts',
+    `SELECT 'sales_daily' AS t, count() AS rows FROM sales_daily
+      UNION ALL SELECT 'sales_hourly', count() FROM sales_hourly
+      UNION ALL SELECT 'product_daily', count() FROM product_daily
+      UNION ALL SELECT 'platform_daily', count() FROM platform_daily`,
+  );
+
   await ask('sale_lines row count', 'SELECT count() AS rows FROM sale_lines');
   await ask(
     'sale_lines distinct sales',

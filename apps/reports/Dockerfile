@@ -1,5 +1,5 @@
 # Build from the repository root:
-# docker build -f apps/outbox-relay/Dockerfile -t jagoan-pos/outbox-relay:local .
+# docker build -f apps/reports/Dockerfile -t jagoan-pos/reports:local .
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 
@@ -21,11 +21,11 @@ RUN npm ci
 
 COPY tsconfig.base.json ./
 COPY packages ./packages
-COPY apps/outbox-relay ./apps/outbox-relay
+COPY apps/reports ./apps/reports
 
-# No prisma:generate — the relay reaches the outbox through pg, not Prisma.
+# No prisma:generate — reports reads ClickHouse and owns no relational schema.
 RUN npm run build:packages \
-  && npm run build --workspace=@jagoan-pos/outbox-relay \
+  && npm run build --workspace=@jagoan-pos/reports \
   && npm prune --omit=dev
 
 FROM node:22-bookworm-slim AS runtime
@@ -37,10 +37,10 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/outbox-relay ./apps/outbox-relay
+COPY --from=builder /app/apps/reports ./apps/reports
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/package.json ./package.json
 
 USER node
-# No EXPOSE: the relay serves nothing, it only polls and publishes.
-CMD ["node", "apps/outbox-relay/dist/main.js"]
+EXPOSE 4004
+CMD ["node", "apps/reports/dist/main.js"]
