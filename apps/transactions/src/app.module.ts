@@ -6,6 +6,7 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { buildLoggerOptions, validateEnv } from '@jagoan-pos/shared';
 import { ENV_FILE_PATH, transactionsEnvSchema } from './config/env.schema';
 import { SalesModule } from './sales/sales.module';
+import { InventoryModule } from './inventory/inventory.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { SalesModule } from './sales/sales.module';
     }),
     LoggerModule.forRoot(buildLoggerOptions('transactions')),
     SalesModule,
+    InventoryModule,
   ],
   providers: [{ provide: APP_PIPE, useClass: ZodValidationPipe }],
 })

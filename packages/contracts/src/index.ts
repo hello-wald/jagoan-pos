@@ -10,3 +10,4 @@ export * from './reports/reports.contract';
 export * from './transactions/sale.schema';
 export * from './transactions/sale-event.schema';
 export * from './transactions/transactions.contract';
+export * from './transactions/inventory.schema';
