@@ -3,10 +3,13 @@ import { JwtService } from '@nestjs/jwt';
 import { RpcException } from '@nestjs/microservices';
 import { AppErrorCode } from '@jagoan-pos/contracts';
 import * as argon2 from 'argon2';
+import { RedisService } from '@jagoan-pos/redis';
+import { cacheKeys } from '@jagoan-pos/shared';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '../generated/prisma/client';
 import { Role } from '../generated/prisma/enums';
+import { LOGIN_RATE_LIMIT } from './auth.constants';
 
 jest.mock('argon2', () => ({ hash: jest.fn(), verify: jest.fn() }));
 
@@ -24,6 +27,13 @@ const prisma = {
 };
 
 const jwt = { signAsync: jest.fn() };
+
+const redis = {
+  get: jest.fn(),
+  getRaw: jest.fn(),
+  incrWithTtl: jest.fn(),
+  del: jest.fn(),
+};
 
 const createdAt = new Date('2026-01-01T00:00:00.000Z');
 const updatedAt = new Date('2026-01-02T00:00:00.000Z');
@@ -70,6 +80,10 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    redis.get.mockResolvedValue(null);
+    redis.incrWithTtl.mockResolvedValue(1);
+    redis.del.mockResolvedValue(undefined);
+
     prisma.$transaction.mockImplementation((run: (t: typeof tx) => Promise<unknown>) => run(tx));
 
     const moduleRef = await Test.createTestingModule({
@@ -77,6 +91,7 @@ describe('AuthService', () => {
         AuthService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwt },
+        { provide: RedisService, useValue: redis },
       ],
     }).compile();
 
@@ -140,14 +155,16 @@ describe('AuthService', () => {
   describe('login', () => {
     const dto = { email: 'butini@example.com', password: 'correct-horse' };
     const withHash = { ...userRow, passwordHash: 'argon2-hash' };
+    const rateLimitKey = cacheKeys.authLoginFailures(dto.email);
 
-    it('returns a token and the lean user on success', async () => {
+    it('returns a token and the lean user on success and resets failure counter', async () => {
       prisma.user.findUnique.mockResolvedValue(withHash);
       verify.mockResolvedValue(true);
       jwt.signAsync.mockResolvedValue('jwt-token');
 
       const result = await service.login(dto);
 
+      expect(redis.del).toHaveBeenCalledWith(rateLimitKey);
       expect(jwt.signAsync).toHaveBeenCalledWith({
         sub: withHash.id,
         role: withHash.role,
@@ -168,7 +185,7 @@ describe('AuthService', () => {
     });
 
     // An unknown email and a wrong password must be indistinguishable to the caller.
-    it('reports INVALID_CREDENTIALS for an unknown email without signing a token', async () => {
+    it('reports INVALID_CREDENTIALS and increments counter for an unknown email without signing a token', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
 
       await expectRpcError(
@@ -176,10 +193,11 @@ describe('AuthService', () => {
         AppErrorCode.INVALID_CREDENTIALS,
         'Invalid email or password',
       );
+      expect(redis.incrWithTtl).toHaveBeenCalledWith(rateLimitKey, LOGIN_RATE_LIMIT.windowSeconds);
       expect(jwt.signAsync).not.toHaveBeenCalled();
     });
 
-    it('reports INVALID_CREDENTIALS for a wrong password', async () => {
+    it('reports INVALID_CREDENTIALS and increments counter for a wrong password', async () => {
       prisma.user.findUnique.mockResolvedValue(withHash);
       verify.mockResolvedValue(false);
 
@@ -188,15 +206,30 @@ describe('AuthService', () => {
         AppErrorCode.INVALID_CREDENTIALS,
         'Invalid email or password',
       );
+      expect(redis.incrWithTtl).toHaveBeenCalledWith(rateLimitKey, LOGIN_RATE_LIMIT.windowSeconds);
       expect(jwt.signAsync).not.toHaveBeenCalled();
     });
 
-    it('refuses an inactive user even with the right password', async () => {
+    it('refuses an inactive user without incrementing failure counter', async () => {
       prisma.user.findUnique.mockResolvedValue({ ...withHash, isActive: false });
       verify.mockResolvedValue(true);
 
       await expectRpcError(service.login(dto), AppErrorCode.USER_INACTIVE, 'User is inactive');
+      expect(redis.incrWithTtl).not.toHaveBeenCalled();
       expect(jwt.signAsync).not.toHaveBeenCalled();
+    });
+
+    it('blocks login immediately with AUTH_RATE_LIMITED when failed attempts reach limit', async () => {
+      redis.get.mockResolvedValue(LOGIN_RATE_LIMIT.maxFailedAttempts);
+
+      await expectRpcError(
+        service.login(dto),
+        AppErrorCode.AUTH_RATE_LIMITED,
+        'Too many login attempts. Try again later.',
+      );
+
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+      expect(verify).not.toHaveBeenCalled();
     });
   });
 

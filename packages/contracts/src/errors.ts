@@ -13,6 +13,7 @@ export const AppErrorCode = {
   SALE_NOT_FOUND: 'SALE_NOT_FOUND',
   CHECKOUT_CONFLICT: 'CHECKOUT_CONFLICT',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
+  AUTH_RATE_LIMITED: 'AUTH_RATE_LIMITED'
 } as const;
 
 export type AppErrorCode = (typeof AppErrorCode)[keyof typeof AppErrorCode];

@@ -12,6 +12,7 @@ import { AuthModule } from './routes/auth/auth.module';
 import { StaffModule } from './routes/staff/staff.module';
 import { ProductsModule } from './products/products.module';
 import { TransactionsModule } from './transactions/transactions.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TransactionsModule } from './transactions/transactions.module';
       validate: validateEnv(gatewayEnvSchema),
     }),
     LoggerModule.forRoot(buildLoggerOptions('api-gateway')),
+    ThrottlerModule.forRoot([{ttl: 60000, limit: 20}]),
     RpcClientsModule,
     AuthModule,
     StaffModule,
