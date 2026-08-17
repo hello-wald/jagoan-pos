@@ -38,6 +38,31 @@ export type CheckoutItemInput = z.infer<typeof checkoutItemSchema>;
 export type CheckoutRequestInput = z.infer<typeof checkoutRequestSchema>;
 export type CheckoutInput = z.infer<typeof checkoutInputSchema>;
 
+export const listSalesQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).max(10_000).optional().default(1),
+    limit: z.coerce.number().int().min(1).max(100).optional().default(10),
+    search: z.string().trim().max(100).optional(),
+    startDate: z.string().date().or(z.string().datetime()).optional(),
+    endDate: z.string().date().or(z.string().datetime()).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        const start = new Date(data.startDate);
+        const end = new Date(data.endDate);
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+          return false;
+        }
+        return start <= end;
+      }
+      return true;
+    },
+    { message: 'startDate must be before or equal to endDate', path: ['startDate'] },
+  );
+
+export type ListSalesQueryInput = z.input<typeof listSalesQuerySchema>;
+
 export type SaleStatus = 'COMPLETED' | 'VOIDED';
 
 /**
@@ -69,6 +94,16 @@ export type Sale = {
   createdAt: Date;
   items: SaleLine[];
 };
+
+export interface PaginatedSales {
+  data: Sale[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
 
 /** Event type carried by the outbox row a completed sale writes. */
 export const SALE_COMPLETED_EVENT = 'SALE_COMPLETED';
