@@ -138,6 +138,15 @@ describe("ProductsService", () => {
     expect(prisma.product.findUnique).not.toHaveBeenCalled();
   });
 
+  it("keeps checkout catalog lookups independent of image storage", async () => {
+    prisma.product.findMany.mockResolvedValue([product]);
+
+    await expect(service.getManyByIds([product.id])).resolves.toEqual([product]);
+
+    expect(prisma.product.findMany).toHaveBeenCalledWith({ where: { id: { in: [product.id] } } });
+    expect(storage.createSignedReadUrl).not.toHaveBeenCalled();
+  });
+
   it("rejects an image upload above the configured size before creating metadata", async () => {
     await expect(
       service.createImageUpload(product.id, {
