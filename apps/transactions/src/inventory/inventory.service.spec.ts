@@ -1,5 +1,10 @@
-import { adjustStockSchema, getMerchantStockQuerySchema } from '@jagoan-pos/contracts';
+import {
+  AppErrorCode,
+  adjustStockSchema,
+  getMerchantStockQuerySchema,
+} from '@jagoan-pos/contracts';
 import { RpcException } from '@nestjs/microservices';
+import { Prisma } from '../generated/prisma/client';
 import type { ProductsClient } from '../clients/products.client';
 import type { TransactionsPrismaService } from '../prisma/prisma.service';
 import { InventoryService } from './inventory.service';
@@ -42,6 +47,7 @@ describe('InventoryService', () => {
     },
     stockMovement: {
       create: jest.fn(),
+      createMany: jest.fn(),
     },
   };
 
@@ -76,8 +82,8 @@ describe('InventoryService', () => {
 
       prisma.inventory.findMany.mockResolvedValueOnce([
         { stockQuantity: 50 }, // Normal stock
-        { stockQuantity: 5 },  // Low stock (<= 10)
-        { stockQuantity: 0 },  // Out of stock
+        { stockQuantity: 5 }, // Low stock (<= 10)
+        { stockQuantity: 0 }, // Out of stock
       ]);
 
       const summary = await service.getInventorySummary(MERCHANT_ID);
@@ -195,12 +201,9 @@ describe('InventoryService', () => {
       };
       tx.inventory.update.mockResolvedValueOnce(updatedInventory);
 
-      const result = await service.adjustStock(
-        MERCHANT_ID,
-        USER_ID,
-        PRODUCT_1_ID,
-        { stockQuantity: 50 },
-      );
+      const result = await service.adjustStock(MERCHANT_ID, USER_ID, PRODUCT_1_ID, {
+        stockQuantity: 50,
+      });
 
       expect(tx.$executeRaw).toHaveBeenCalled();
       expect(tx.$queryRaw).toHaveBeenCalled();
@@ -241,12 +244,7 @@ describe('InventoryService', () => {
         updatedAt: new Date('2026-08-16T12:00:00.000Z'),
       });
 
-      await service.adjustStock(
-        MERCHANT_ID,
-        USER_ID,
-        PRODUCT_1_ID,
-        { stockQuantity: 50 },
-      );
+      await service.adjustStock(MERCHANT_ID, USER_ID, PRODUCT_1_ID, { stockQuantity: 50 });
 
       expect(tx.stockMovement.create).not.toHaveBeenCalled();
     });
@@ -266,12 +264,9 @@ describe('InventoryService', () => {
       };
       tx.inventory.update.mockResolvedValueOnce(updatedInventory);
 
-      const result = await service.adjustStock(
-        MERCHANT_ID,
-        USER_ID,
-        PRODUCT_1_ID,
-        { stockQuantity: 0 },
-      );
+      const result = await service.adjustStock(MERCHANT_ID, USER_ID, PRODUCT_1_ID, {
+        stockQuantity: 0,
+      });
 
       expect(result.stockQuantity).toBe(0);
       expect(tx.stockMovement.create).toHaveBeenCalledWith({
@@ -304,8 +299,130 @@ describe('InventoryService', () => {
   });
 
   // ==========================================
-  // 4. CONTRACT SCHEMA VALIDATION TESTS
+  // 4. CHECKOUT PARTICIPATION TESTS
   // ==========================================
+  // These run inside SalesService's transaction rather than owning one.
+  describe('decrementForSale', () => {
+    const lines = [
+      { productId: PRODUCT_1_ID, productNameSnapshot: 'Kopi Susu', quantity: 2 },
+      { productId: PRODUCT_2_ID, productNameSnapshot: 'Roti Bakar', quantity: 1 },
+    ];
+
+    it('decrements each line with the quantity guard in the same statement', async () => {
+      tx.inventory.update.mockResolvedValue({ stockQuantity: 8 });
+
+      await service.decrementForSale(tx as never, MERCHANT_ID, lines);
+
+      expect(tx.inventory.update).toHaveBeenCalledWith({
+        where: {
+          merchantId_productId: { merchantId: MERCHANT_ID, productId: PRODUCT_1_ID },
+          stockQuantity: { gte: 2 },
+        },
+        data: { stockQuantity: { decrement: 2 } },
+      });
+    });
+
+    it('uses the transaction it is handed and never opens its own', async () => {
+      tx.inventory.update.mockResolvedValue({ stockQuantity: 8 });
+
+      await service.decrementForSale(tx as never, MERCHANT_ID, lines);
+
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('takes inventory locks in product-id order regardless of cart order', async () => {
+      tx.inventory.update.mockResolvedValue({ stockQuantity: 8 });
+
+      await service.decrementForSale(tx as never, MERCHANT_ID, [...lines].reverse());
+
+      const lockedIds = tx.inventory.update.mock.calls.map(
+        (call) =>
+          (call[0] as { where: { merchantId_productId: { productId: string } } }).where
+            .merchantId_productId.productId,
+      );
+      expect(lockedIds).toEqual([...lockedIds].sort((a, b) => a.localeCompare(b)));
+    });
+
+    it('returns the post-decrement balance per product', async () => {
+      tx.inventory.update
+        .mockResolvedValueOnce({ stockQuantity: 8 })
+        .mockResolvedValueOnce({ stockQuantity: 3 });
+
+      const balances = await service.decrementForSale(tx as never, MERCHANT_ID, lines);
+
+      expect(balances.get(PRODUCT_1_ID)).toBe(8);
+      expect(balances.get(PRODUCT_2_ID)).toBe(3);
+    });
+
+    it('names the offending line when stock is short', async () => {
+      tx.inventory.update.mockResolvedValueOnce({ stockQuantity: 8 }).mockRejectedValueOnce(
+        new Prisma.PrismaClientKnownRequestError('not found', {
+          code: 'P2025',
+          clientVersion: '7.9.1',
+        }),
+      );
+
+      const promise = service.decrementForSale(tx as never, MERCHANT_ID, lines);
+
+      await expect(promise).rejects.toBeInstanceOf(RpcException);
+      await promise.catch((error: unknown) => {
+        expect((error as RpcException).getError()).toEqual({
+          code: AppErrorCode.INSUFFICIENT_STOCK,
+          message: 'Insufficient stock for Roti Bakar',
+        });
+      });
+    });
+
+    it('does not swallow an unrelated database failure', async () => {
+      tx.inventory.update.mockRejectedValue(new Error('connection reset'));
+
+      await expect(service.decrementForSale(tx as never, MERCHANT_ID, lines)).rejects.toThrow(
+        'connection reset',
+      );
+    });
+  });
+
+  describe('recordSaleMovements', () => {
+    it('writes one SALE movement per line with a negative delta and the new balance', async () => {
+      await service.recordSaleMovements(tx as never, {
+        merchantId: MERCHANT_ID,
+        saleId: 'sale-1',
+        actorId: USER_ID,
+        lines: [
+          { productId: PRODUCT_1_ID, productNameSnapshot: 'Kopi Susu', quantity: 2 },
+          { productId: PRODUCT_2_ID, productNameSnapshot: 'Roti Bakar', quantity: 1 },
+        ],
+        balances: new Map([
+          [PRODUCT_1_ID, 8],
+          [PRODUCT_2_ID, 3],
+        ]),
+      });
+
+      expect(tx.stockMovement.createMany).toHaveBeenCalledWith({
+        data: [
+          {
+            merchantId: MERCHANT_ID,
+            productId: PRODUCT_1_ID,
+            delta: -2,
+            balanceAfter: 8,
+            reason: 'SALE',
+            actorId: USER_ID,
+            saleId: 'sale-1',
+          },
+          {
+            merchantId: MERCHANT_ID,
+            productId: PRODUCT_2_ID,
+            delta: -1,
+            balanceAfter: 3,
+            reason: 'SALE',
+            actorId: USER_ID,
+            saleId: 'sale-1',
+          },
+        ],
+      });
+    });
+  });
+
   describe('Schema Validations', () => {
     it('should validate adjustStockSchema correctly', () => {
       expect(adjustStockSchema.safeParse({ stockQuantity: 10 }).success).toBe(true);

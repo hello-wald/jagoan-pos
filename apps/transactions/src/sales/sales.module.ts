@@ -4,12 +4,14 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import type { TransactionsEnv } from '../config/env.schema';
 import { PRODUCTS_CLIENT, ProductsClient } from '../clients/products.client';
 import { TransactionsPrismaModule } from '../prisma/prisma.module';
+import { InventoryModule } from '../inventory/inventory.module';
 import { SalesController } from './sales.controller';
 import { SalesService } from './sales.service';
 
 @Module({
   imports: [
     TransactionsPrismaModule,
+    InventoryModule,
     ClientsModule.registerAsync([
       {
         name: PRODUCTS_CLIENT,

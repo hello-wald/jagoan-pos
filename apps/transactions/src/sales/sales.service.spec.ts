@@ -2,6 +2,7 @@ import { AppErrorCode, checkoutRequestSchema } from '@jagoan-pos/contracts';
 import { RpcException } from '@nestjs/microservices';
 import { Prisma } from '../generated/prisma/client';
 import type { ProductsClient } from '../clients/products.client';
+import type { InventoryService } from '../inventory/inventory.service';
 import type { TransactionsPrismaService } from '../prisma/prisma.service';
 import { SalesService } from './sales.service';
 
@@ -47,6 +48,12 @@ const baseInput = {
 
 /** Two noodles at 15k plus one egg at 5k. */
 const EXPECTED_TOTAL = 35_000;
+
+/** Post-decrement balances, as InventoryService would return them. */
+const BALANCES = new Map([
+  [NOODLE_ID, 8],
+  [EGG_ID, 3],
+]);
 
 function saleRow(overrides: Record<string, unknown> = {}) {
   return {
@@ -100,9 +107,7 @@ async function expectSaleError(
 describe('SalesService', () => {
   const tx = {
     transactionCounter: { upsert: jest.fn() },
-    inventory: { update: jest.fn() },
     sale: { create: jest.fn() },
-    stockMovement: { createMany: jest.fn() },
     outboxEvent: { create: jest.fn() },
   };
 
@@ -113,6 +118,12 @@ describe('SalesService', () => {
 
   const products = { send: jest.fn() };
 
+  const inventory = {
+    decrementForSale: jest.fn(),
+    recordSaleMovements: jest.fn(),
+    adjustStock: jest.fn(),
+  };
+
   let service: SalesService;
 
   beforeEach(() => {
@@ -122,14 +133,15 @@ describe('SalesService', () => {
     prisma.$transaction.mockImplementation((run: (t: typeof tx) => Promise<unknown>) => run(tx));
     products.send.mockResolvedValue([noodle, egg]);
     tx.transactionCounter.upsert.mockResolvedValue({ lastSeq: 1 });
-    tx.inventory.update.mockResolvedValue({ stockQuantity: 8 });
     tx.sale.create.mockResolvedValue(saleRow());
-    tx.stockMovement.createMany.mockResolvedValue({ count: 2 });
     tx.outboxEvent.create.mockResolvedValue({ id: 'outbox-1' });
+    inventory.decrementForSale.mockResolvedValue(BALANCES);
+    inventory.recordSaleMovements.mockResolvedValue(undefined);
 
     service = new SalesService(
       prisma as unknown as TransactionsPrismaService,
       products as unknown as ProductsClient,
+      inventory as unknown as InventoryService,
     );
   });
 
@@ -249,38 +261,50 @@ describe('SalesService', () => {
     });
   });
 
+  // How stock is decremented and how movements are shaped belongs to
+  // InventoryService, which owns both tables. What matters here is that checkout
+  // delegates to it, hands it the sale's own transaction, and aborts on its error.
   describe('stock', () => {
-    it('decrements each line with the quantity guard in the same statement', async () => {
+    it('decrements through the inventory service inside the sale transaction', async () => {
       await service.checkout(baseInput);
 
-      expect(tx.inventory.update).toHaveBeenCalledWith({
-        where: {
-          merchantId_productId: { merchantId: MERCHANT_ID, productId: NOODLE_ID },
-          stockQuantity: { gte: 2 },
-        },
-        data: { stockQuantity: { decrement: 2 } },
+      expect(inventory.decrementForSale).toHaveBeenCalledTimes(1);
+      const [handedTx, merchantId, lines] = inventory.decrementForSale.mock.calls[0];
+      expect(handedTx).toBe(tx);
+      expect(merchantId).toBe(MERCHANT_ID);
+      expect(lines.map((line: { productId: string }) => line.productId)).toEqual([
+        NOODLE_ID,
+        EGG_ID,
+      ]);
+    });
+
+    it('records the SALE movements against the sale it just wrote', async () => {
+      await service.checkout(baseInput);
+
+      const [handedTx, params] = inventory.recordSaleMovements.mock.calls[0];
+      expect(handedTx).toBe(tx);
+      expect(params).toMatchObject({
+        merchantId: MERCHANT_ID,
+        saleId: 'sale-1',
+        actorId: CASHIER_ID,
+        balances: BALANCES,
       });
     });
 
-    it('takes inventory locks in product-id order regardless of cart order', async () => {
-      await service.checkout({
-        ...baseInput,
-        items: [
-          { productId: EGG_ID, quantity: 1 },
-          { productId: NOODLE_ID, quantity: 2 },
-        ],
-      });
+    it('never opens a stock transaction of its own', async () => {
+      await service.checkout(baseInput);
 
-      const lockedIds = tx.inventory.update.mock.calls.map(
-        (call) => call[0].where.merchantId_productId.productId,
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+      expect(inventory.adjustStock).not.toHaveBeenCalled();
+    });
+
+    it('rejects the whole sale when the inventory service reports short stock', async () => {
+      inventory.decrementForSale.mockRejectedValue(
+        new RpcException({
+          code: AppErrorCode.INSUFFICIENT_STOCK,
+          message: 'Insufficient stock for Telur Ceplok',
+        }),
       );
-      expect(lockedIds).toEqual([...lockedIds].sort((a, b) => a.localeCompare(b)));
-    });
-
-    it('rejects the whole sale and names the offending line when stock is short', async () => {
-      tx.inventory.update
-        .mockResolvedValueOnce({ stockQuantity: 8 })
-        .mockRejectedValueOnce(prismaKnownError('P2025'));
 
       await expectSaleError(
         service.checkout(baseInput),
@@ -289,37 +313,7 @@ describe('SalesService', () => {
       );
       expect(tx.sale.create).not.toHaveBeenCalled();
       expect(tx.outboxEvent.create).not.toHaveBeenCalled();
-    });
-
-    it('writes one SALE movement per line with a negative delta and the new balance', async () => {
-      tx.inventory.update
-        .mockResolvedValueOnce({ stockQuantity: 8 })
-        .mockResolvedValueOnce({ stockQuantity: 3 });
-
-      await service.checkout(baseInput);
-
-      expect(tx.stockMovement.createMany).toHaveBeenCalledWith({
-        data: [
-          {
-            merchantId: MERCHANT_ID,
-            productId: NOODLE_ID,
-            delta: -2,
-            balanceAfter: 8,
-            reason: 'SALE',
-            actorId: CASHIER_ID,
-            saleId: 'sale-1',
-          },
-          {
-            merchantId: MERCHANT_ID,
-            productId: EGG_ID,
-            delta: -1,
-            balanceAfter: 3,
-            reason: 'SALE',
-            actorId: CASHIER_ID,
-            saleId: 'sale-1',
-          },
-        ],
-      });
+      expect(inventory.recordSaleMovements).not.toHaveBeenCalled();
     });
   });
 
@@ -370,7 +364,7 @@ describe('SalesService', () => {
       expect(result.transactionNumber).toBe('INV/20260815/0001');
       expect(prisma.$transaction).not.toHaveBeenCalled();
       expect(products.send).not.toHaveBeenCalled();
-      expect(tx.inventory.update).not.toHaveBeenCalled();
+      expect(inventory.decrementForSale).not.toHaveBeenCalled();
     });
 
     it('returns the winner when a concurrent request loses on the idempotency index', async () => {
