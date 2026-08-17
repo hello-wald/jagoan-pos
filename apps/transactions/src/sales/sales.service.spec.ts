@@ -112,7 +112,12 @@ describe('SalesService', () => {
   };
 
   const prisma = {
-    sale: { findUnique: jest.fn() },
+    sale: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      count: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
 
@@ -130,6 +135,9 @@ describe('SalesService', () => {
     jest.clearAllMocks();
 
     prisma.sale.findUnique.mockResolvedValue(null);
+    prisma.sale.findMany.mockResolvedValue([saleRow()]);
+    prisma.sale.findFirst.mockResolvedValue(saleRow());
+    prisma.sale.count.mockResolvedValue(1);
     prisma.$transaction.mockImplementation((run: (t: typeof tx) => Promise<unknown>) => run(tx));
     products.send.mockResolvedValue([noodle, egg]);
     tx.transactionCounter.upsert.mockResolvedValue({ lastSeq: 1 });
@@ -442,6 +450,122 @@ describe('SalesService', () => {
         quantity: 2,
         subtotal: 30_000,
       });
+    });
+  });
+
+  describe('list', () => {
+    it('returns paginated sales for merchant with default pagination', async () => {
+      const result = await service.list(MERCHANT_ID, {});
+
+      expect(prisma.sale.count).toHaveBeenCalledWith({
+        where: { merchantId: MERCHANT_ID },
+      });
+      expect(prisma.sale.findMany).toHaveBeenCalledWith({
+        where: { merchantId: MERCHANT_ID },
+        include: { items: { orderBy: { productNameSnapshot: 'asc' } } },
+        orderBy: { createdAt: 'desc' },
+        skip: 0,
+        take: 10,
+      });
+      expect(result.data).toHaveLength(1);
+      expect(result.meta).toEqual({
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      });
+    });
+
+    it('applies cashierIdFilter when provided (cashier role isolation)', async () => {
+      await service.list(MERCHANT_ID, { page: 2, limit: 5 }, CASHIER_ID);
+
+      expect(prisma.sale.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            merchantId: MERCHANT_ID,
+            cashierId: CASHIER_ID,
+          }),
+          skip: 5,
+          take: 5,
+        }),
+      );
+    });
+
+    it('applies date filter with startDate and endDate', async () => {
+      await service.list(MERCHANT_ID, {
+        startDate: '2026-08-01',
+        endDate: '2026-08-15',
+      });
+
+      expect(prisma.sale.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            merchantId: MERCHANT_ID,
+            createdAt: {
+              gte: new Date('2026-08-01T00:00:00.000+07:00'),
+              lte: new Date('2026-08-15T23:59:59.999+07:00'),
+            },
+          }),
+        }),
+      );
+    });
+
+    it('applies search query across transactionNumber, cashierName, and product items', async () => {
+      await service.list(MERCHANT_ID, { search: 'Mie' });
+
+      expect(prisma.sale.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            merchantId: MERCHANT_ID,
+            OR: [
+              { transactionNumber: { contains: 'Mie', mode: 'insensitive' } },
+              { cashierNameSnapshot: { contains: 'Mie', mode: 'insensitive' } },
+              {
+                items: {
+                  some: {
+                    OR: [
+                      { productNameSnapshot: { contains: 'Mie', mode: 'insensitive' } },
+                      { skuSnapshot: { contains: 'Mie', mode: 'insensitive' } },
+                    ],
+                  },
+                },
+              },
+            ],
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('getById', () => {
+    it('returns a sale detail by id and merchantId', async () => {
+      const result = await service.getById(MERCHANT_ID, 'sale-1');
+
+      expect(prisma.sale.findFirst).toHaveBeenCalledWith({
+        where: { id: 'sale-1', merchantId: MERCHANT_ID },
+        include: { items: { orderBy: { productNameSnapshot: 'asc' } } },
+      });
+      expect(result.id).toBe('sale-1');
+      expect(result.merchantId).toBe(MERCHANT_ID);
+    });
+
+    it('enforces cashierIdFilter when cashier accesses their own sale', async () => {
+      await service.getById(MERCHANT_ID, 'sale-1', CASHIER_ID);
+
+      expect(prisma.sale.findFirst).toHaveBeenCalledWith({
+        where: { id: 'sale-1', merchantId: MERCHANT_ID, cashierId: CASHIER_ID },
+        include: { items: { orderBy: { productNameSnapshot: 'asc' } } },
+      });
+    });
+
+    it('throws SALE_NOT_FOUND if sale does not exist or tenant does not match', async () => {
+      prisma.sale.findFirst.mockResolvedValue(null);
+
+      await expectSaleError(
+        service.getById(MERCHANT_ID, 'non-existent'),
+        AppErrorCode.SALE_NOT_FOUND,
+        'Transaction not found',
+      );
     });
   });
 });

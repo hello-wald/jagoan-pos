@@ -5,6 +5,8 @@ import {
   SALE_COMPLETED_EVENT,
   type CheckoutInput,
   type CheckoutItemInput,
+  type ListSalesQueryInput,
+  type PaginatedSales,
   type Sale,
 } from '@jagoan-pos/contracts';
 import { Prisma } from '../generated/prisma/client';
@@ -39,6 +41,82 @@ export class SalesService {
     private readonly products: ProductsClient,
     private readonly inventory: InventoryService,
   ) {}
+
+  async list(
+    merchantId: string,
+    query: ListSalesQueryInput,
+    cashierIdFilter?: string,
+  ): Promise<PaginatedSales> {
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 10);
+    const skip = (page - 1) * limit;
+
+    const dateFilter = this.parseDateRange(query.startDate, query.endDate);
+
+    const searchFilter: Prisma.SaleWhereInput | undefined = query.search
+      ? {
+          OR: [
+            { transactionNumber: { contains: query.search, mode: 'insensitive' } },
+            { cashierNameSnapshot: { contains: query.search, mode: 'insensitive' } },
+            {
+              items: {
+                some: {
+                  OR: [
+                    { productNameSnapshot: { contains: query.search, mode: 'insensitive' } },
+                    { skuSnapshot: { contains: query.search, mode: 'insensitive' } },
+                  ],
+                },
+              },
+            },
+          ],
+        }
+      : undefined;
+
+    const where: Prisma.SaleWhereInput = {
+      merchantId,
+      ...(cashierIdFilter ? { cashierId: cashierIdFilter } : {}),
+      ...(dateFilter ? { createdAt: dateFilter } : {}),
+      ...searchFilter,
+    };
+
+    const [total, rows] = await Promise.all([
+      this.prisma.sale.count({ where }),
+      this.prisma.sale.findMany({
+        where,
+        include: { items: { orderBy: { productNameSnapshot: 'asc' } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data: rows.map((row) => this.toSale(row)),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
+  async getById(merchantId: string, id: string, cashierIdFilter?: string): Promise<Sale> {
+    const sale = await this.prisma.sale.findFirst({
+      where: {
+        id,
+        merchantId,
+        ...(cashierIdFilter ? { cashierId: cashierIdFilter } : {}),
+      },
+      include: { items: { orderBy: { productNameSnapshot: 'asc' } } },
+    });
+
+    if (!sale) {
+      throw this.rpcError(AppErrorCode.SALE_NOT_FOUND, 'Transaction not found');
+    }
+
+    return this.toSale(sale);
+  }
 
   async checkout(input: CheckoutInput): Promise<Sale> {
     const replay = await this.findByIdempotencyKey(input.merchantId, input.idempotencyKey);
@@ -248,6 +326,25 @@ export class SalesService {
         subtotal: Number(item.subtotal),
       })),
     };
+  }
+
+  private parseDateRange(
+    startDate?: string,
+    endDate?: string,
+  ): { gte?: Date; lte?: Date } | undefined {
+    if (!startDate && !endDate) return undefined;
+    const range: { gte?: Date; lte?: Date } = {};
+    if (startDate) {
+      range.gte = startDate.includes('T')
+        ? new Date(startDate)
+        : new Date(`${startDate}T00:00:00.000+07:00`);
+    }
+    if (endDate) {
+      range.lte = endDate.includes('T')
+        ? new Date(endDate)
+        : new Date(`${endDate}T23:59:59.999+07:00`);
+    }
+    return range;
   }
 
   private rpcError(code: AppErrorCode, message: string): RpcException {

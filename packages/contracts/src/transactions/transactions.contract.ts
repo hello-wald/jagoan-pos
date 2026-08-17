@@ -5,10 +5,18 @@ import type {
   InventorySummary,
   PaginatedMerchantStock,
 } from './inventory.schema';
-import type { CheckoutInput, Sale } from './sale.schema';
+import type { CheckoutInput, ListSalesQueryInput, PaginatedSales, Sale } from './sale.schema';
 
 export interface TransactionsContract {
   'sales.checkout': { request: CheckoutInput; response: Sale };
+  'sales.list': {
+    request: { merchantId: string; query: ListSalesQueryInput; cashierIdFilter?: string };
+    response: PaginatedSales;
+  };
+  'sales.getById': {
+    request: { merchantId: string; id: string; cashierIdFilter?: string };
+    response: Sale;
+  };
   'inventory.getMerchantStock': {
     request: { merchantId: string; query: GetMerchantStockQueryInput };
     response: PaginatedMerchantStock;
