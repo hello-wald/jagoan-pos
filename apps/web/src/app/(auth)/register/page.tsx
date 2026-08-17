@@ -7,8 +7,8 @@ export default function RegisterPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl tracking-[-0.015em]">Daftarkan merchant Anda</h1>
         <p className="text-sm leading-relaxed text-ink-2">
-          Pendaftaran ini membuat merchant baru sekaligus akun pemiliknya. Akun kasir dibuat
-          dari dalam aplikasi setelah Anda masuk.
+          Pendaftaran ini membuat merchant baru sekaligus akun pemiliknya. Akun kasir dibuat dari
+          dalam aplikasi setelah Anda masuk.
         </p>
       </div>
 

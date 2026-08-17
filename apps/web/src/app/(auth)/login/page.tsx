@@ -23,7 +23,10 @@ export default async function LoginPage({
 
       <p className="text-sm text-ink-2">
         Belum punya merchant?{' '}
-        <Link href="/register" className="font-medium text-accent-deep underline underline-offset-4">
+        <Link
+          href="/register"
+          className="font-medium text-accent-deep underline underline-offset-4"
+        >
           Daftarkan merchant Anda
         </Link>
       </p>
