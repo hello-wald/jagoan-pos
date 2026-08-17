@@ -43,8 +43,8 @@ export const listSalesQuerySchema = z
     page: z.coerce.number().int().min(1).max(10_000).optional().default(1),
     limit: z.coerce.number().int().min(1).max(100).optional().default(10),
     search: z.string().trim().max(100).optional(),
-    startDate: z.string().date().or(z.string().datetime()).optional(),
-    endDate: z.string().date().or(z.string().datetime()).optional(),
+    startDate: z.iso.date().or(z.iso.datetime()).optional(),
+    endDate: z.iso.date().or(z.iso.datetime()).optional(),
   })
   .refine(
     (data) => {
