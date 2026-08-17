@@ -42,9 +42,15 @@ async function main(): Promise<void> {
   );
 
   await ask(
-    'rabbitmq consumers attached',
-    `SELECT database, table, queue_name, channel_id, is_currently_used
-       FROM system.rabbitmq_consumers`,
+    'engine activity, last hour',
+    `SELECT toString(max(event_time)) AS last_seen,
+            substring(message, 1, 80) AS message,
+            count() AS occurrences
+       FROM system.text_log
+      WHERE event_time > now() - INTERVAL 1 HOUR AND logger_name LIKE '%RabbitMQ%'
+      GROUP BY message
+      ORDER BY last_seen DESC
+      LIMIT 10`,
   );
 
   await ask(
