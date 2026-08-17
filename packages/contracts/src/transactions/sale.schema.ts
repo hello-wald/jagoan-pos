@@ -91,7 +91,7 @@ export type Sale = {
   totalAmount: number;
   cashReceived: number;
   changeAmount: number;
-  createdAt: Date;
+  createdAt: string;
   items: SaleLine[];
 };
 

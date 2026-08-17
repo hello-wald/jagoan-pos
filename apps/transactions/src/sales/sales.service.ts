@@ -295,11 +295,7 @@ export class SalesService {
    * survives JSON, so both are converted.
    */
   private buildEventPayload(sale: SaleWithItems): Prisma.InputJsonValue {
-    const mapped = this.toSale(sale);
-    return {
-      ...mapped,
-      createdAt: mapped.createdAt.toISOString(),
-    } as unknown as Prisma.InputJsonValue;
+    return this.toSale(sale) as unknown as Prisma.InputJsonValue;
   }
 
   private toSale(sale: SaleWithItems): Sale {
@@ -315,7 +311,7 @@ export class SalesService {
       totalAmount: Number(sale.totalAmount),
       cashReceived: Number(sale.cashReceived),
       changeAmount: Number(sale.changeAmount),
-      createdAt: sale.createdAt,
+      createdAt: sale.createdAt.toISOString(),
       items: sale.items.map((item: SaleLineRow) => ({
         id: item.id,
         productId: item.productId,

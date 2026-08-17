@@ -135,7 +135,12 @@ export class ProductsService {
     const products = await this.prisma.product.findMany({ where: { id: { in: ids } } });
     // This RPC is used by checkout for catalog validation. It must not depend on
     // storage availability or generate signed URLs that the caller does not use.
-    return products.map((product) => ({ ...product, images: [] }));
+    return products.map((product) => ({
+      ...product,
+      createdAt: product.createdAt.toISOString(),
+      updatedAt: product.updatedAt.toISOString(),
+      images: [],
+    }));
   }
 
   async update(id: string, dto: UpdateProductInput): Promise<Product> {
@@ -282,8 +287,8 @@ export class ProductsService {
       category: product.category,
       price: product.price,
       isActive: product.isActive,
-      createdAt: product.createdAt,
-      updatedAt: product.updatedAt,
+      createdAt: product.createdAt.toISOString(),
+      updatedAt: product.updatedAt.toISOString(),
       images: await Promise.all(product.images.map((image) => this.toProductImage(image))),
     };
   }
@@ -303,7 +308,7 @@ export class ProductsService {
         contentType: image.contentType,
         sizeBytes: image.sizeBytes,
         sortOrder: image.sortOrder,
-        createdAt: image.createdAt,
+        createdAt: image.createdAt.toISOString(),
       };
     } catch {
       throw this.rpcError(AppErrorCode.STORAGE_ERROR, "Unable to create image URL");

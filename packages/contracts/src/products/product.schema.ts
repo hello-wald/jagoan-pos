@@ -57,8 +57,8 @@ export type Product = {
   category: string | null;
   price: number;
   isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   images: ProductImage[];
 };
 
@@ -68,7 +68,7 @@ export type ProductImage = {
   contentType: string;
   sizeBytes: number;
   sortOrder: number;
-  createdAt: Date;
+  createdAt: string;
 };
 
 export type ProductImageUpload = {
