@@ -9,6 +9,14 @@ const MESSAGES: Record<AppErrorCode, string> = {
   [AppErrorCode.USER_NOT_FOUND]: 'Pengguna tidak ditemukan.',
   [AppErrorCode.CASHIER_NOT_FOUND]: 'Kasir tidak ditemukan.',
   [AppErrorCode.PRODUCT_NOT_FOUND]: 'Produk tidak ditemukan.',
+  // Added after a concurrent products-service PR (commit 7227738) introduced
+  // image upload support and these five codes, post-dating this file's
+  // original authoring. See SDD ledger Ruling 5.
+  [AppErrorCode.PRODUCT_IMAGE_NOT_FOUND]: 'Gambar produk tidak ditemukan.',
+  [AppErrorCode.PRODUCT_IMAGE_LIMIT_REACHED]: 'Jumlah gambar produk sudah mencapai batas maksimum.',
+  [AppErrorCode.INVALID_PRODUCT_IMAGE]: 'Berkas gambar tidak valid.',
+  [AppErrorCode.PRODUCT_IMAGE_NOT_READY]: 'Gambar belum selesai diunggah.',
+  [AppErrorCode.STORAGE_ERROR]: 'Terjadi kesalahan penyimpanan. Coba lagi.',
   [AppErrorCode.SKU_ALREADY_EXISTS]: 'SKU ini sudah dipakai produk lain.',
   [AppErrorCode.PERMANENT_DELETE_FORBIDDEN]:
     'Produk tidak bisa dihapus permanen. Nonaktifkan produk ini sebagai gantinya.',
