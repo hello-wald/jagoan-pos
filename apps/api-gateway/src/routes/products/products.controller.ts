@@ -11,13 +11,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import type { PaginatedProducts, Product } from '@jagoan-pos/contracts';
+import type { PaginatedProducts, Product, ProductImage, ProductImageUpload } from '@jagoan-pos/contracts';
 import { ProductsClient } from '../../clients/products.client';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import {
   CreateProductDto,
+  CreateProductImageUploadDto,
   ProductListQueryDto,
   SetProductActiveDto,
   UpdateProductDto,
@@ -65,5 +66,29 @@ export class ProductsController {
   @Delete(':productId')
   delete(@Param('productId', ParseUUIDPipe) id: string): Promise<never> {
     return this.products.send('products.delete', { id });
+  }
+
+  @Post(':productId/images/upload-url')
+  createImageUploadUrl(
+    @Param('productId', ParseUUIDPipe) productId: string,
+    @Body() dto: CreateProductImageUploadDto,
+  ): Promise<ProductImageUpload> {
+    return this.products.send('products.createImageUpload', { productId, dto });
+  }
+
+  @Post(':productId/images/:imageId/complete')
+  completeImageUpload(
+    @Param('productId', ParseUUIDPipe) productId: string,
+    @Param('imageId', ParseUUIDPipe) imageId: string,
+  ): Promise<ProductImage> {
+    return this.products.send('products.completeImageUpload', { productId, imageId });
+  }
+
+  @Delete(':productId/images/:imageId')
+  async deleteImage(
+    @Param('productId', ParseUUIDPipe) productId: string,
+    @Param('imageId', ParseUUIDPipe) imageId: string,
+  ): Promise<void> {
+    await this.products.send('products.deleteImage', { productId, imageId });
   }
 }

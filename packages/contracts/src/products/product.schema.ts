@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 const skuSchema = z
   .string()
@@ -7,7 +7,7 @@ const skuSchema = z
   .max(64)
   .regex(
     /^[A-Za-z0-9][A-Za-z0-9._-]*$/,
-    'SKU may contain only letters, numbers, dots, underscores, and hyphens',
+    "SKU may contain only letters, numbers, dots, underscores, and hyphens",
   );
 
 const priceSchema = z.coerce.number().int().positive().max(2_147_483_647);
@@ -22,10 +22,20 @@ export const createProductSchema = z.object({
 export const updateProductSchema = createProductSchema
   .partial()
   .refine((value) => Object.values(value).some((entry) => entry !== undefined), {
-    message: 'At least one product field must be provided',
+    message: "At least one product field must be provided",
   });
 
 export const setProductActiveSchema = z.object({ isActive: z.boolean() });
+
+export const createProductImageUploadSchema = z.object({
+  fileName: z.string().trim().min(1).max(255),
+  contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+  sizeBytes: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(5 * 1024 * 1024),
+});
 
 export const productListQuerySchema = z.object({
   query: z.string().trim().min(1).max(150).optional(),
@@ -37,6 +47,7 @@ export const productListQuerySchema = z.object({
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 export type SetProductActiveInput = z.infer<typeof setProductActiveSchema>;
+export type CreateProductImageUploadInput = z.infer<typeof createProductImageUploadSchema>;
 export type ProductListQuery = z.infer<typeof productListQuerySchema>;
 
 export type Product = {
@@ -48,6 +59,23 @@ export type Product = {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  images: ProductImage[];
+};
+
+export type ProductImage = {
+  id: string;
+  url: string;
+  contentType: string;
+  sizeBytes: number;
+  sortOrder: number;
+  createdAt: Date;
+};
+
+export type ProductImageUpload = {
+  imageId: string;
+  uploadUrl: string;
+  uploadToken: string;
+  path: string;
 };
 
 export type PaginatedProducts = {

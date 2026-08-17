@@ -17,6 +17,7 @@
   "dependencies": {
     "@jagoan-pos/contracts": "^0.0.1",
     "@jagoan-pos/shared": "^0.0.1",
+    "@jagoan-pos/redis": "^0.0.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
@@ -24,6 +25,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "@supabase/supabase-js": "^2.98.0",
     "dotenv": "^17.4.1",
     "nestjs-pino": "^4.4.0",
     "nestjs-zod": "^5.5.0",
