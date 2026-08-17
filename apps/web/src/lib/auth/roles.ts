@@ -1,12 +1,17 @@
+import type { Route } from 'next';
 import type { UserRole } from '@jagoan-pos/contracts';
 
-const HOME_BY_ROLE: Record<UserRole, string> = {
-  GLOBAL_ADMIN: '/admin/products',
-  OWNER: '/dashboard',
-  CASHIER: '/checkout',
+// Cast once, here: these routes are built in a later task (T10), so
+// Next's typedRoutes literal union can't see them yet. Every caller gets
+// back an already-typed Route instead of repeating the cast at each
+// router.push/replace/redirect call site.
+const HOME_BY_ROLE: Record<UserRole, Route> = {
+  GLOBAL_ADMIN: '/admin/products' as Route,
+  OWNER: '/dashboard' as Route,
+  CASHIER: '/checkout' as Route,
 };
 
-export function homeForRole(role: UserRole): string {
+export function homeForRole(role: UserRole): Route {
   return HOME_BY_ROLE[role];
 }
 
