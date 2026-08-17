@@ -34,7 +34,10 @@ TRANSACTIONS_DIRECT_URL='postgresql://...' npx prisma migrate deploy
 
 | Method | Path | Roles | Purpose |
 | --- | --- | --- | --- |
-| `POST` | `/api/cashier/checkout` | `CASHIER`, `OWNER` | Record a sale |
+| `POST` | `/api/transactions/checkout` | `CASHIER`, `OWNER` | Record a sale |
+| `GET` | `/api/inventory` | `OWNER` | Merchant stock, paged over the catalog |
+| `GET` | `/api/inventory/summary` | `OWNER` | Stock totals for the dashboard |
+| `PATCH` | `/api/inventory/:productId` | `OWNER` | Set stock to an absolute quantity |
 
 Merchant and cashier identity come from the verified JWT, never the request
 body. The client sends only product ids and quantities — prices are read from
@@ -98,8 +101,9 @@ All manual stock change is owner-only. A cashier affects stock solely by selling
 | `ADJUSTMENT` | **Owner only** | Signed |
 | `INITIAL` | System/seed | Positive |
 
-Only `SALE` is written today; the receive and adjust endpoints are not yet built.
-When they are, both sit behind one `@Roles('OWNER')` guard.
+`SALE` is written by checkout and `ADJUSTMENT` by `PATCH /api/inventory/:productId`,
+which sets an absolute quantity and records the computed delta. `RECEIVE` has no
+endpoint yet; when it lands it sits behind the same `@Roles('OWNER')` guard.
 
 This is narrower than the FRD, which grants cashiers `adjust` in the permission
 matrix (§3.1) and receive in US-4.1. Both are superseded. It also makes FRD open
@@ -111,7 +115,8 @@ only ever be positive while an adjustment is signed.
 
 ## Seeding stock locally
 
-There is no stock-write endpoint yet, so seed directly to exercise checkout:
+`PATCH /api/inventory/:productId` is the supported way to set stock. To skip the
+gateway entirely when exercising checkout, seed directly:
 
 ```sql
 INSERT INTO inventories (id, merchant_id, product_id, stock_quantity, created_at, updated_at)

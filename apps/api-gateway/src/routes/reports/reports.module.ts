@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { RpcClientsModule } from '../clients/clients.module';
+import { RpcClientsModule } from '../../clients/clients.module';
 import { ReportsController } from './reports.controller';
 
 @Module({

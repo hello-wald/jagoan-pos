@@ -1,18 +1,18 @@
 import { Body, Controller, ForbiddenException, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { AuthUser, Sale } from '@jagoan-pos/contracts';
-import { TransactionsClient } from '../clients/transactions.client';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { Roles } from '../common/decorators/roles.decorator';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { TransactionsClient } from '../../clients/transactions.client';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { CheckoutDto } from './dto/checkout.dto';
 
-@ApiTags('Checkout')
+@ApiTags('Transactions')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('CASHIER', 'OWNER')
-@Controller('cashier')
+@Controller('transactions')
 export class TransactionsController {
   constructor(private readonly transactions: TransactionsClient) {}
 
