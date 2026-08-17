@@ -25,6 +25,7 @@ const prisma = {
 const redis = { get: jest.fn(), set: jest.fn(), del: jest.fn() };
 
 const merchantId = 'merchant-1';
+const merchantName = 'Warung Bu Tini';
 const createdAt = new Date('2026-01-01T00:00:00.000Z');
 const updatedAt = new Date('2026-01-02T00:00:00.000Z');
 
@@ -38,12 +39,20 @@ function cashierRow(overrides: Partial<{ id: string; isActive: boolean }> = {}) 
     isActive: true,
     createdAt,
     updatedAt,
+    merchant: { name: merchantName },
     ...overrides,
   };
 }
 
 function asSummary(row: ReturnType<typeof cashierRow>) {
-  return { ...row, createdAt: createdAt.toISOString(), updatedAt: updatedAt.toISOString() };
+  // Mirrors toUserSummary: the relation is flattened to a plain name.
+  const { merchant, ...user } = row;
+  return {
+    ...user,
+    merchantName: merchant?.name ?? null,
+    createdAt: createdAt.toISOString(),
+    updatedAt: updatedAt.toISOString(),
+  };
 }
 
 async function expectRpcError(

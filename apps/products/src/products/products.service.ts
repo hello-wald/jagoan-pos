@@ -59,6 +59,11 @@ export class ProductsService {
     return product;
   }
 
+  getManyByIds(ids: string[]): Promise<Product[]> {
+    if (ids.length === 0) return Promise.resolve([]);
+    return this.prisma.product.findMany({ where: { id: { in: ids } } });
+  }
+
   async update(id: string, dto: UpdateProductInput): Promise<Product> {
     try {
       return await this.prisma.product.update({

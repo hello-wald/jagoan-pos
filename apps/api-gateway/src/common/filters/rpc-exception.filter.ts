@@ -17,6 +17,12 @@ const statusByCode: Record<string, HttpStatus> = {
   [AppErrorCode.PRODUCT_NOT_FOUND]: HttpStatus.NOT_FOUND,
   [AppErrorCode.SKU_ALREADY_EXISTS]: HttpStatus.CONFLICT,
   [AppErrorCode.PERMANENT_DELETE_FORBIDDEN]: HttpStatus.METHOD_NOT_ALLOWED,
+  [AppErrorCode.INSUFFICIENT_STOCK]: HttpStatus.CONFLICT,
+  [AppErrorCode.PRODUCT_INACTIVE]: HttpStatus.UNPROCESSABLE_ENTITY,
+  [AppErrorCode.INSUFFICIENT_CASH]: HttpStatus.UNPROCESSABLE_ENTITY,
+  [AppErrorCode.SALE_NOT_FOUND]: HttpStatus.NOT_FOUND,
+  [AppErrorCode.CHECKOUT_CONFLICT]: HttpStatus.CONFLICT,
+  [AppErrorCode.AUTH_RATE_LIMITED]: HttpStatus.TOO_MANY_REQUESTS,
 };
 
 /** Turns an RpcException payload from any service into an HTTP status. */

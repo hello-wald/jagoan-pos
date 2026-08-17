@@ -14,6 +14,7 @@ export type JwtPayload = z.infer<typeof jwtPayloadSchema>;
 export type AuthUser = {
   id: string;
   merchantId: string | null;
+  merchantName: string | null;
   fullName: string;
   email: string;
   role: UserRole;

@@ -1,0 +1,138 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Current sellable quantity per merchant. This is the row cashiers contend on,
+/// so reporting must never aggregate over it — read stock_movements instead.
+model Inventory {
+  id            String   @id @default(uuid()) @db.Uuid
+  merchantId    String   @map("merchant_id") @db.Uuid
+  productId     String   @map("product_id") @db.Uuid
+  stockQuantity Int      @default(0) @map("stock_quantity")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([merchantId, productId])
+  @@map("inventories")
+}
+
+enum StockMovementReason {
+  SALE // cashier, via checkout
+  RECEIVE // OWNER ONLY, positive delta
+  ADJUSTMENT // OWNER ONLY, signed delta
+  INITIAL // system/seed
+
+  @@map("stock_movement_reason")
+}
+
+/// Append-only ledger.
+model StockMovement {
+  id           String              @id @default(uuid()) @db.Uuid
+  merchantId   String              @map("merchant_id") @db.Uuid
+  productId    String              @map("product_id") @db.Uuid
+  delta        Int
+  balanceAfter Int                 @map("balance_after")
+  reason       StockMovementReason
+  actorId      String              @map("actor_id") @db.Uuid
+  saleId       String?             @map("sale_id") @db.Uuid
+  note         String?             @db.VarChar(255)
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([merchantId, productId, createdAt])
+  @@index([merchantId, createdAt])
+  @@map("stock_movements")
+}
+
+enum SaleStatus {
+  COMPLETED
+  VOIDED
+
+  @@map("sale_status")
+}
+
+model Sale {
+  id                   String     @id @default(uuid()) @db.Uuid
+  merchantId           String     @map("merchant_id") @db.Uuid
+  merchantNameSnapshot String     @map("merchant_name_snapshot") @db.VarChar(150)
+  cashierId            String     @map("cashier_id") @db.Uuid
+  cashierNameSnapshot  String     @map("cashier_name_snapshot") @db.VarChar(150)
+  transactionNumber    String     @map("transaction_number") @db.VarChar(100)
+  idempotencyKey       String     @map("idempotency_key") @db.VarChar(255)
+  status               SaleStatus @default(COMPLETED)
+  totalQuantity        Int        @map("total_quantity")
+  totalAmount          BigInt     @map("total_amount")
+  cashReceived         BigInt     @map("cash_received")
+  changeAmount         BigInt     @map("change_amount")
+  createdAt            DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  items                SaleItem[]
+
+  outboxEvents         OutboxEvent[]
+
+  @@unique([merchantId, transactionNumber])
+  @@unique([merchantId, idempotencyKey])
+  @@index([merchantId, createdAt])
+  @@index([cashierId, createdAt])
+  @@map("sales")
+}
+
+model SaleItem {
+  id                  String   @id @default(uuid()) @db.Uuid
+  saleId              String   @map("sale_id") @db.Uuid
+  productId           String   @map("product_id") @db.Uuid
+  productNameSnapshot String   @map("product_name_snapshot") @db.VarChar(200)
+  skuSnapshot         String   @map("sku_snapshot") @db.VarChar(100)
+  unitPrice           Int      @map("unit_price")
+  quantity            Int
+  subtotal            BigInt
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  sale                Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@unique([saleId, productId])
+  @@index([saleId])
+  @@map("sale_items")
+}
+
+enum OutboxStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+
+  @@map("outbox_status")
+}
+
+/// Transactional outbox.
+model OutboxEvent {
+  id          String       @id @default(uuid()) @db.Uuid
+  saleId      String       @map("sale_id") @db.Uuid
+  merchantId  String       @map("merchant_id") @db.Uuid
+  eventType   String       @map("event_type") @db.VarChar(100)
+  payload     Json         @db.JsonB
+  status      OutboxStatus @default(PENDING)
+  publishedAt DateTime?    @map("published_at") @db.Timestamptz(6)
+  attempts    Int          @default(0)
+  lastError   String?      @map("last_error") @db.VarChar(500)
+  traceId     String?      @map("trace_id") @db.VarChar(64)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  sale        Sale         @relation(fields: [saleId], references: [id], onDelete: Restrict)
+
+  /// A sale emits at most one event per type 
+  @@unique([saleId, eventType])
+  @@index([status, createdAt])
+  @@map("outbox_events")
+}
+
+/// Human-readable transaction numbers.
+model TransactionCounter {
+  merchantId String   @map("merchant_id") @db.Uuid
+  bookDate   DateTime @map("book_date") @db.Date
+  lastSeq    Int      @default(0) @map("last_seq")
+
+  @@id([merchantId, bookDate])
+  @@map("transaction_counters")
+}

@@ -9,12 +9,16 @@ import { Role } from '../generated/prisma/enums';
 import { Prisma } from '../generated/prisma/client';
 import { toUserSummary, userSelect } from '../common/user.mapper';
 import { LoginDto, RegisterOwnerDto } from './dto/auth.dto';
+import { RedisService } from '@jagoan-pos/redis';
+import { cacheKeys } from '@jagoan-pos/shared';
+import { LOGIN_RATE_LIMIT } from './auth.constants';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly redis: RedisService,
   ) {}
 
   async registerOwner(dto: RegisterOwnerDto): Promise<UserSummary> {
@@ -49,10 +53,18 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<LoginResult> {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const key = this.getLoginRateLimitKey(dto.email)
+    await this.assertLoginAllowed(key)
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+      include: { merchant: { select: { name: true } } },
+    });
 
     // Same error for an unknown email and a wrong password, so login cannot enumerate accounts.
     if (!user || !(await argon2.verify(user.passwordHash, dto.password))) {
+      await this.redis.incrWithTtl(key, LOGIN_RATE_LIMIT.windowSeconds)
+
       throw new RpcException({
         code: AppErrorCode.INVALID_CREDENTIALS,
         message: 'Invalid email or password',
@@ -62,6 +74,8 @@ export class AuthService {
     if (!user.isActive) {
       throw new RpcException({ code: AppErrorCode.USER_INACTIVE, message: 'User is inactive' });
     }
+
+    await this.redis.del(key)
 
     const payload: JwtPayload = {
       sub: user.id,
@@ -74,6 +88,7 @@ export class AuthService {
       user: {
         id: user.id,
         merchantId: user.merchantId,
+        merchantName: user.merchant?.name ?? null,
         fullName: user.fullName,
         email: user.email,
         role: user.role,
@@ -94,4 +109,22 @@ export class AuthService {
 
     return toUserSummary(user);
   }
+
+
+  private getLoginRateLimitKey(email: string): string { 
+    const normalized = email.trim().toLowerCase()
+    return cacheKeys.authLoginFailures(normalized)
+  }
+  private async assertLoginAllowed(key: string): Promise<void> { 
+    const attempt = await this.redis.get<number>(key);
+
+    if((attempt ?? 0) >= LOGIN_RATE_LIMIT.maxFailedAttempts){
+      throw new RpcException({
+        code: AppErrorCode.AUTH_RATE_LIMITED, 
+        message: 'Too many login attempts. Try again later.'
+      })
+    }
+
+  }
+
 }
