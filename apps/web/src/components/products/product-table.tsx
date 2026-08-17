@@ -41,7 +41,8 @@ export function ProductTable({ params }: { params: ProductListParams }) {
             <Skeleton className="h-4 flex-[2]" />
             <Skeleton className="h-4 flex-[2]" />
             <Skeleton className="h-4 flex-1" />
-            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-24" />
           </div>
         ))}
       </div>
@@ -169,7 +170,10 @@ function Pagination({ page, pages }: { page: number; pages: number }) {
   return (
     <div className="flex items-center gap-2">
       {page > 1 ? (
-        <Link href={href(page - 1)} className="rounded-[--radius-control] px-3 py-1.5 hover:bg-paper">
+        <Link
+          href={href(page - 1)}
+          className="rounded-[--radius-control] px-3 py-1.5 hover:bg-paper"
+        >
           Sebelumnya
         </Link>
       ) : null}
@@ -177,7 +181,10 @@ function Pagination({ page, pages }: { page: number; pages: number }) {
         {page} / {pages}
       </span>
       {page < pages ? (
-        <Link href={href(page + 1)} className="rounded-[--radius-control] px-3 py-1.5 hover:bg-paper">
+        <Link
+          href={href(page + 1)}
+          className="rounded-[--radius-control] px-3 py-1.5 hover:bg-paper"
+        >
           Berikutnya
         </Link>
       ) : null}
