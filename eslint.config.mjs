@@ -6,7 +6,14 @@ import { defineConfig } from 'eslint/config';
 
 export default defineConfig(
   {
-    ignores: ['**/dist/**', '**/generated/**', '**/node_modules/**', 'apps/ai-analytics/**'],
+    ignores: [
+      '**/dist/**',
+      '**/generated/**',
+      '**/node_modules/**',
+      '**/.next/**',
+      'apps/web/next-env.d.ts',
+      'apps/ai-analytics/**',
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
@@ -15,7 +22,7 @@ export default defineConfig(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['eslint.config.mjs'],
+          allowDefaultProject: ['eslint.config.mjs', 'apps/web/postcss.config.mjs'],
         },
         tsconfigRootDir: import.meta.dirname,
       },

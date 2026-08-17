@@ -1,0 +1,24 @@
+@theme {
+  --color-paper: #FCFCFB;
+  --color-surface: #FFFFFF;
+  --color-ink: #17171A;
+  --color-ink-2: #55555E;
+  --color-ink-3: #6B6B75;
+  --color-line: #E7E7E4;
+
+  /* FILL ONLY. Never text, never a 1px stroke — see tokens.test.ts. */
+  --color-accent: #E8AF25;
+  --color-accent-deep: #A06207;
+
+  --color-danger: #B91C1C;
+  --color-danger-fill: #DC2626;
+  --color-warning: #C2410C;
+  --color-success: #15803D;
+
+  --radius-control: 8px;
+  --radius-panel: 12px;
+  --radius-badge: 6px;
+
+  --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, monospace;
+}
