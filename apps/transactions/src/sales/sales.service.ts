@@ -10,6 +10,7 @@ import {
 import { Prisma } from '../generated/prisma/client';
 import { TransactionsPrismaService } from '../prisma/prisma.service';
 import { ProductsClient } from '../clients/products.client';
+import { InventoryService } from '../inventory/inventory.service';
 
 /** Daily numbering -> WIB. */
 const BOOK_TIME_ZONE = 'Asia/Jakarta';
@@ -36,6 +37,7 @@ export class SalesService {
   constructor(
     private readonly prisma: TransactionsPrismaService,
     private readonly products: ProductsClient,
+    private readonly inventory: InventoryService,
   ) {}
 
   async checkout(input: CheckoutInput): Promise<Sale> {
@@ -72,14 +74,7 @@ export class SalesService {
     totalQuantity: number,
   ): Promise<SaleWithItems> {
     const transactionNumber = await this.nextTransactionNumber(tx, input.merchantId);
-
-    // Concurrent carts must take inventory locks in the same order or they deadlock.
-    const ordered = [...lines].sort((a, b) => a.productId.localeCompare(b.productId));
-
-    const balanceAfter = new Map<string, number>();
-    for (const line of ordered) {
-      balanceAfter.set(line.productId, await this.decrementStock(tx, input.merchantId, line));
-    }
+    const balances = await this.inventory.decrementForSale(tx, input.merchantId, lines);
 
     const sale = await tx.sale.create({
       data: {
@@ -107,16 +102,12 @@ export class SalesService {
       ...saleWithItems,
     });
 
-    await tx.stockMovement.createMany({
-      data: ordered.map((line) => ({
-        merchantId: input.merchantId,
-        productId: line.productId,
-        delta: -line.quantity,
-        balanceAfter: balanceAfter.get(line.productId) ?? 0,
-        reason: 'SALE' as const,
-        actorId: input.cashierId,
-        saleId: sale.id,
-      })),
+    await this.inventory.recordSaleMovements(tx, {
+      merchantId: input.merchantId,
+      saleId: sale.id,
+      actorId: input.cashierId,
+      lines,
+      balances,
     });
 
     await tx.outboxEvent.create({
@@ -129,32 +120,6 @@ export class SalesService {
     });
 
     return sale;
-  }
-
-  private async decrementStock(
-    tx: Prisma.TransactionClient,
-    merchantId: string,
-    line: ResolvedLine,
-  ): Promise<number> {
-    try {
-      const updated = await tx.inventory.update({
-        where: {
-          merchantId_productId: { merchantId, productId: line.productId },
-          stockQuantity: { gte: line.quantity },
-        },
-        data: { stockQuantity: { decrement: line.quantity } },
-      });
-      return updated.stockQuantity;
-    } catch (error) {
-      // P2025 covers both "never stocked" and "not enough left".
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-        throw this.rpcError(
-          AppErrorCode.INSUFFICIENT_STOCK,
-          `Insufficient stock for ${line.productNameSnapshot}`,
-        );
-      }
-      throw error;
-    }
   }
 
   /** Gap-free per merchant per day; the counter row lock serializes the sequence. */

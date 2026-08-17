@@ -8,8 +8,16 @@ import {
   type InventorySummary,
   type PaginatedMerchantStock,
 } from '@jagoan-pos/contracts';
+import { Prisma } from '../generated/prisma/client';
 import { TransactionsPrismaService } from '../prisma/prisma.service';
 import { ProductsClient } from '../clients/products.client';
+
+/** The part of a resolved cart line that stock movement needs. */
+export type SaleStockLine = {
+  productId: string;
+  productNameSnapshot: string;
+  quantity: number;
+};
 
 @Injectable()
 export class InventoryService {
@@ -17,6 +25,87 @@ export class InventoryService {
     private readonly prisma: TransactionsPrismaService,
     private readonly products: ProductsClient,
   ) {}
+
+  /**
+   * Decrements every line inside the *caller's* transaction, so the stock write
+   * commits with the sale or not at all. This must never open a transaction of
+   * its own: that would put the decrement on a separate connection, where it
+   * would survive a sale that later fails.
+   */
+  async decrementForSale(
+    tx: Prisma.TransactionClient,
+    merchantId: string,
+    lines: SaleStockLine[],
+  ): Promise<Map<string, number>> {
+    const balances = new Map<string, number>();
+
+    for (const line of this.orderForLocking(lines)) {
+      balances.set(line.productId, await this.decrementLine(tx, merchantId, line));
+    }
+
+    return balances;
+  }
+
+  /**
+   * The `SALE` half of the ledger. Balances come from `decrementForSale`, which
+   * is what keeps a movement's `balanceAfter` equal to the row it was read from.
+   */
+  async recordSaleMovements(
+    tx: Prisma.TransactionClient,
+    params: {
+      merchantId: string;
+      saleId: string;
+      actorId: string;
+      lines: SaleStockLine[];
+      balances: Map<string, number>;
+    },
+  ): Promise<void> {
+    await tx.stockMovement.createMany({
+      data: this.orderForLocking(params.lines).map((line) => ({
+        merchantId: params.merchantId,
+        productId: line.productId,
+        delta: -line.quantity,
+        balanceAfter: params.balances.get(line.productId) ?? 0,
+        reason: 'SALE' as const,
+        actorId: params.actorId,
+        saleId: params.saleId,
+      })),
+    });
+  }
+
+  /**
+   * Concurrent carts that take inventory locks in different orders deadlock.
+   * Every writer of `inventories` inherits the ordering by going through here.
+   */
+  private orderForLocking<T extends { productId: string }>(lines: T[]): T[] {
+    return [...lines].sort((a, b) => a.productId.localeCompare(b.productId));
+  }
+
+  private async decrementLine(
+    tx: Prisma.TransactionClient,
+    merchantId: string,
+    line: SaleStockLine,
+  ): Promise<number> {
+    try {
+      const updated = await tx.inventory.update({
+        where: {
+          merchantId_productId: { merchantId, productId: line.productId },
+          stockQuantity: { gte: line.quantity },
+        },
+        data: { stockQuantity: { decrement: line.quantity } },
+      });
+      return updated.stockQuantity;
+    } catch (error) {
+      // P2025 covers both "never stocked" and "not enough left".
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new RpcException({
+          code: AppErrorCode.INSUFFICIENT_STOCK,
+          message: `Insufficient stock for ${line.productNameSnapshot}`,
+        });
+      }
+      throw error;
+    }
+  }
 
   async getInventorySummary(merchantId: string): Promise<InventorySummary> {
     const [catalog, allMerchantInventories] = await Promise.all([
