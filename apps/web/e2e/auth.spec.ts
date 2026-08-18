@@ -32,7 +32,10 @@ test('a wrong password never reveals whether the email exists', async ({ page })
   await page.getByLabel('Kata sandi').fill('salah-sekali');
   await page.getByRole('button', { name: 'Masuk' }).click();
 
-  const alert = page.getByRole('alert');
+  // getByRole('alert') alone matches two elements in a real browser: the
+  // app's Banner AND Next's own route-announcer div, which also carries
+  // role="alert". Scope to the one with the actual message.
+  const alert = page.getByRole('alert').filter({ hasText: 'Email atau kata sandi salah.' });
   await expect(alert).toHaveText('Email atau kata sandi salah.');
 });
 
