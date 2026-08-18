@@ -26,5 +26,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp)$).*)'],
+  // /bff is excluded: it's the BFF proxy route, which must always reach its
+  // route handler (even with a missing/expired session) so the gateway's own
+  // 401 — already handled correctly by bff-client.ts — can flow through
+  // instead of a redirect-to-/login HTML response masquerading as a 200.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|bff|.*\\.(?:png|jpg|jpeg|svg|webp)$).*)'],
 };
