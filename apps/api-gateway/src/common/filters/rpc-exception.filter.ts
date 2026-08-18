@@ -28,6 +28,10 @@ const statusByCode: Record<string, HttpStatus> = {
   [AppErrorCode.SALE_NOT_FOUND]: HttpStatus.NOT_FOUND,
   [AppErrorCode.CHECKOUT_CONFLICT]: HttpStatus.CONFLICT,
   [AppErrorCode.AUTH_RATE_LIMITED]: HttpStatus.TOO_MANY_REQUESTS,
+  [AppErrorCode.AI_TEMPORARILY_UNAVAILABLE]: HttpStatus.SERVICE_UNAVAILABLE,
+  [AppErrorCode.AI_TOOL_NOT_ALLOWED]: HttpStatus.BAD_REQUEST,
+  [AppErrorCode.AI_TOOL_ARGUMENTS_INVALID]: HttpStatus.UNPROCESSABLE_ENTITY,
+  [AppErrorCode.AI_TOOL_CALL_LIMIT_REACHED]: HttpStatus.UNPROCESSABLE_ENTITY,
 };
 
 /** Turns an RpcException payload from any service into an HTTP status. */
