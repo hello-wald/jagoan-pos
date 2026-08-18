@@ -7,7 +7,7 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { loginSchema, type LoginInput } from '@jagoan-pos/contracts';
 import { loginAction } from '@/lib/auth/actions';
-import { homeForRole } from '@/lib/auth/roles';
+import { decideRoute, homeForRole } from '@/lib/auth/roles';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
@@ -31,10 +31,14 @@ export function LoginForm({ next }: { next: string | null }) {
       const result = await loginAction(values);
       if (result.ok) {
         // `next` was already restricted to a same-origin path by the page
-        // (see the /login route), so this cast is not re-opening the
-        // redirect check — it's only working around typedRoutes not being
-        // able to see a value it can't statically infer.
-        router.replace((next ?? homeForRole(result.role)) as Route);
+        // (see the /login route), but it can still name a route the
+        // authenticated role isn't allowed to visit (e.g. a CASHIER
+        // following a deep link to /admin/products) — decideRoute is the
+        // single source of truth for that check, so fall back to the
+        // role's home instead of blindly honoring an unpermitted `next`.
+        const destination =
+          next && decideRoute(next, result.role).kind === 'allow' ? next : homeForRole(result.role);
+        router.replace(destination as Route);
         router.refresh();
         return;
       }
