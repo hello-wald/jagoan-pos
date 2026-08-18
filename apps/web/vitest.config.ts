@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [react()],
@@ -13,5 +13,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     globals: true,
+    // Playwright owns e2e/**; without this Vitest's default *.spec.ts glob
+    // also picks those files up and fails outside a Playwright runner.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
   },
 });
