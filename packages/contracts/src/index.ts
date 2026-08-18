@@ -11,5 +11,5 @@ export * from './transactions/sale.schema';
 export * from './transactions/sale-event.schema';
 export * from './transactions/transactions.contract';
 export * from './transactions/inventory.schema';
-export * from './ai/ai.contract'
-export * from './ai/ai.schema'
+export * from './ai/ai.contract';
+export * from './ai/ai.schema';

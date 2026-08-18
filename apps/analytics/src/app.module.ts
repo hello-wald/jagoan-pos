@@ -5,6 +5,7 @@ import { buildLoggerOptions, validateEnv } from '@jagoan-pos/shared';
 import { LoggerModule } from 'nestjs-pino';
 import { APP_PIPE } from '@nestjs/core';
 import { ZodValidationPipe } from 'nestjs-zod';
+import { RpcClientsModule } from './clients/clients.module';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { ZodValidationPipe } from 'nestjs-zod';
       validate: validateEnv(analyticsEnvSchema),
     }),
     LoggerModule.forRoot(buildLoggerOptions('analytics')),
+    RpcClientsModule,
   ],
-  providers: [{provide: APP_PIPE, useClass: ZodValidationPipe}],
+  providers: [{ provide: APP_PIPE, useClass: ZodValidationPipe }],
 })
 export class AppModule {}
