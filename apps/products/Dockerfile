@@ -8,12 +8,14 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
+COPY apps/analytics/package.json apps/analytics/
 COPY apps/api-gateway/package.json apps/api-gateway/
 COPY apps/core/package.json apps/core/
 COPY apps/outbox-relay/package.json apps/outbox-relay/
 COPY apps/products/package.json apps/products/
 COPY apps/reports/package.json apps/reports/
 COPY apps/transactions/package.json apps/transactions/
+COPY apps/web/package.json apps/web/
 COPY packages/contracts/package.json packages/contracts/
 COPY packages/redis/package.json packages/redis/
 COPY packages/shared/package.json packages/shared/

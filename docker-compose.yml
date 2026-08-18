@@ -33,6 +33,8 @@ services:
       TRANSACTIONS_TCP_PORT: 4003
       REPORTS_HOST: reports
       REPORTS_TCP_PORT: 4004
+      ANALYTICS_HOST: analytics
+      ANALYTICS_TCP_PORT: 4005
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
@@ -45,6 +47,8 @@ services:
       transactions:
         condition: service_started
       reports:
+        condition: service_started
+      analytics:
         condition: service_started
     healthcheck:
       test:
@@ -157,6 +161,30 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
     expose:
       - '4004'
+    networks: [backend]
+
+  # AI Insight orchestrator. It can call only the reports service, which keeps
+  # the LLM outside the transactional checkout path and database credentials.
+  analytics:
+    image: ${ANALYTICS_IMAGE:?ANALYTICS_IMAGE is required}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      ANALYTICS_HOST: 0.0.0.0
+      ANALYTICS_TCP_PORT: 4005
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?GEMINI_API_KEY is required}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash-lite}
+      AI_MAX_TOOL_CALLS: ${AI_MAX_TOOL_CALLS:-3}
+      AI_MAX_MESSAGE_LENGTH: ${AI_MAX_MESSAGE_LENGTH:-2000}
+      AI_MAX_RANGE_DAYS: ${AI_MAX_RANGE_DAYS:-92}
+      REPORTS_HOST: reports
+      REPORTS_TCP_PORT: 4004
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    expose:
+      - '4005'
+    depends_on:
+      reports:
+        condition: service_started
     networks: [backend]
 
 networks:

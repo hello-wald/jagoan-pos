@@ -14,6 +14,8 @@ export const gatewayEnvSchema = z.object({
   TRANSACTIONS_TCP_PORT: z.coerce.number().int().min(1).max(65535).default(4003),
   REPORTS_HOST: z.string().min(1).default('0.0.0.0'),
   REPORTS_TCP_PORT: z.coerce.number().int().min(1).max(65535).default(4004),
+  ANALYTICS_HOST: z.string().min(1).default('0.0.0.0'),
+  ANALYTICS_TCP_PORT: z.coerce.number().int().min(1).max(65535).default(4005),
   JWT_SECRET: z.string().min(32),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).optional(),
 });

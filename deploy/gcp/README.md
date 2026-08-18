@@ -1,8 +1,9 @@
 # GCE deployment
 
-This Compose stack deploys the API gateway, Core, Products, and Caddy as the
-HTTPS reverse proxy. Supabase, Upstash Redis, and the Vercel frontend remain
-external services.
+This Compose stack deploys the API gateway, Core, Products, Transactions,
+Outbox Relay, Reports, Analytics, and Caddy as the HTTPS reverse proxy.
+Supabase, Upstash Redis, RabbitMQ, ClickHouse, Gemini, and the Vercel frontend
+remain external services.
 
 ## First deployment
 

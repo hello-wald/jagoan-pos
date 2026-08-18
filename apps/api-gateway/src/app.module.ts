@@ -14,6 +14,7 @@ import { ProductsModule } from './routes/products/products.module';
 import { ReportsModule } from './routes/reports/reports.module';
 import { TransactionsModule } from './routes/transactions/transactions.module';
 import { InventoryModule } from './routes/inventory/inventory.module';
+import { AiInsightModule } from './routes/ai-insight/ai-insight.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
@@ -25,7 +26,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
       validate: validateEnv(gatewayEnvSchema),
     }),
     LoggerModule.forRoot(buildLoggerOptions('api-gateway')),
-    ThrottlerModule.forRoot([{ttl: 60000, limit: 20}]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 20 }]),
     RpcClientsModule,
     AuthModule,
     StaffModule,
@@ -33,7 +34,9 @@ import { ThrottlerModule } from '@nestjs/throttler';
     ReportsModule,
     TransactionsModule,
     InventoryModule,
+    AiInsightModule,
   ],
+
   controllers: [HealthController],
   providers: [JwtStrategy, { provide: APP_PIPE, useClass: ZodValidationPipe }],
 })

@@ -12,10 +12,14 @@ apps/*/.env
 **/dist/
 **/generated/
 *.tsbuildinfo
+apps/web/.next/
+apps/web/next-env.d.ts
 
 # Test and runtime output
 coverage/
 *.log
+apps/web/test-results/
+apps/web/playwright-report/
 
 # AI tooling
 .agents/

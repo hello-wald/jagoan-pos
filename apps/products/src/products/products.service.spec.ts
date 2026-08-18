@@ -141,7 +141,13 @@ describe("ProductsService", () => {
   it("keeps checkout catalog lookups independent of image storage", async () => {
     prisma.product.findMany.mockResolvedValue([product]);
 
-    await expect(service.getManyByIds([product.id])).resolves.toEqual([product]);
+    await expect(service.getManyByIds([product.id])).resolves.toEqual([
+      {
+        ...product,
+        createdAt: product.createdAt.toISOString(),
+        updatedAt: product.updatedAt.toISOString(),
+      },
+    ]);
 
     expect(prisma.product.findMany).toHaveBeenCalledWith({ where: { id: { in: [product.id] } } });
     expect(storage.createSignedReadUrl).not.toHaveBeenCalled();

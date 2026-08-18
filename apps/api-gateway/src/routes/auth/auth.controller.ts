@@ -3,9 +3,9 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import type { AuthUser, LoginResult, UserSummary } from '@jagoan-pos/contracts';
 import { CoreClient } from '../../clients/core.client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { AuthThrottlerGuard } from '../../common/guards/auth-throttler.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { LoginDto, RegisterOwnerDto } from './dto/auth.dto';
-import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
@@ -18,7 +18,7 @@ export class AuthController {
   }
 
   @Post('login')
-  @UseGuards(ThrottlerGuard)
+  @UseGuards(AuthThrottlerGuard)
   login(@Body() dto: LoginDto): Promise<LoginResult> {
     return this.core.send('auth.login', dto);
   }
