@@ -26,8 +26,15 @@ const MESSAGES: Record<AppErrorCode, string> = {
   [AppErrorCode.SALE_NOT_FOUND]: 'Transaksi tidak ditemukan.',
   [AppErrorCode.CHECKOUT_CONFLICT]: 'Transaksi ini sedang diproses. Coba lagi sebentar.',
   [AppErrorCode.AUTH_RATE_LIMITED]: 'Terlalu banyak percobaan. Coba lagi dalam satu menit.',
+  [AppErrorCode.AI_TEMPORARILY_UNAVAILABLE]:
+    'Layanan AI sedang tidak tersedia atau timeout. Coba lagi sebentar.',
+  [AppErrorCode.AI_TOOL_NOT_ALLOWED]: 'Fitur atau alat analitik tidak diizinkan.',
+  [AppErrorCode.AI_TOOL_ARGUMENTS_INVALID]: 'Parameter analitik tidak valid.',
+  [AppErrorCode.AI_TOOL_CALL_LIMIT_REACHED]:
+    'Batas pemanggilan data analitik telah tercapai. Coba ajukan pertanyaan yang lebih spesifik.',
   [AppErrorCode.INTERNAL_ERROR]: 'Terjadi kesalahan. Coba lagi.',
 };
+
 
 export function messageFor(code: AppErrorCode): string {
   return MESSAGES[code] ?? MESSAGES[AppErrorCode.INTERNAL_ERROR];

@@ -6,6 +6,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { APP_PIPE } from '@nestjs/core';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { RpcClientsModule } from './clients/clients.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { RpcClientsModule } from './clients/clients.module';
     }),
     LoggerModule.forRoot(buildLoggerOptions('analytics')),
     RpcClientsModule,
+    AiModule,
   ],
   providers: [{ provide: APP_PIPE, useClass: ZodValidationPipe }],
 })
