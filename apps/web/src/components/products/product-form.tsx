@@ -54,7 +54,7 @@ export function ProductForm({ mode, product }: Props) {
     defaultValues: {
       name: product?.name ?? '',
       sku: product?.sku ?? '',
-      category: product?.category ?? '',
+      category: product?.category ?? undefined,
       price: product?.price ?? null,
     },
   });
@@ -72,7 +72,9 @@ export function ProductForm({ mode, product }: Props) {
     const full: CreateProductInput = {
       name: values.name,
       sku: values.sku,
-      category: values.category?.trim() ? values.category.trim() : undefined,
+      // setValueAs on the category field already normalizes '' -> undefined
+      // before the resolver runs, so values.category is already clean here.
+      category: values.category,
       price: values.price as number,
     };
 
@@ -126,7 +128,13 @@ export function ProductForm({ mode, product }: Props) {
       </Field>
 
       <Field id="category" label="Kategori (opsional)" error={errors.category?.message}>
-        <Input id="category" {...register('category')} />
+        <Input
+          id="category"
+          {...register('category', {
+            setValueAs: (value: unknown) =>
+              typeof value === 'string' && value.trim() ? value.trim() : undefined,
+          })}
+        />
       </Field>
 
       <Controller
