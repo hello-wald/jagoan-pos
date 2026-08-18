@@ -12,7 +12,7 @@ import {
 import { AppErrorCode } from '@jagoan-pos/contracts';
 import type { AnalyticsEnv } from '../../config/env.schema';
 import { ANALYTICS_TOOLS } from '../tools/tool-registry';
-import { SYSTEM_PROMPT } from '../ai.prompt';
+import { buildSystemPrompt } from '../ai.prompt';
 import type { LlmContent, LlmInput, LlmPart, LlmResponse, LlmToolDefinition } from './llm.types';
 
 @Injectable()
@@ -46,7 +46,7 @@ export class LlmClient {
         model: this.modelName,
         contents: sdkContents,
         config: {
-          systemInstruction: SYSTEM_PROMPT,
+          systemInstruction: buildSystemPrompt(),
           tools: sdkTools.length > 0 ? [{ functionDeclarations: sdkTools }] : undefined,
           temperature: 0.2,
           maxOutputTokens: 1024,
@@ -61,18 +61,20 @@ export class LlmClient {
       const candidateContent = response.candidates?.[0]?.content;
       const modelParts: LlmPart[] = candidateContent?.parts
         ? candidateContent.parts.map((p) => {
+            const part: LlmPart = {
+              ...(p as unknown as Record<string, unknown>),
+            };
             if (p.functionCall) {
-              return {
-                functionCall: {
-                  name: p.functionCall.name ?? '',
-                  args: (p.functionCall.args as Record<string, unknown>) ?? {},
-                },
+              part.functionCall = {
+                name: p.functionCall.name ?? '',
+                args: (p.functionCall.args as Record<string, unknown>) ?? {},
+                ...((p.functionCall as unknown as Record<string, unknown>) ?? {}),
               };
             }
             if (p.text) {
-              return { text: p.text };
+              part.text = p.text;
             }
-            return {};
+            return part;
           })
         : functionCalls.map((fc) => ({ functionCall: fc }));
 
@@ -100,13 +102,17 @@ export class LlmClient {
     return contents.map((c) => ({
       role: c.role,
       parts: c.parts.map((p): Part => {
+        const part: Record<string, unknown> = { ...p };
         if (p.functionCall) {
-          return { functionCall: p.functionCall };
+          part.functionCall = p.functionCall;
         }
         if (p.functionResponse) {
-          return { functionResponse: p.functionResponse };
+          part.functionResponse = p.functionResponse;
         }
-        return { text: p.text ?? '' };
+        if (p.text !== undefined) {
+          part.text = p.text;
+        }
+        return part as unknown as Part;
       }),
     }));
   }

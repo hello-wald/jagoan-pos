@@ -47,6 +47,9 @@ export class AiService {
 
       // Guardrail: if LLM returns tool calls but limit reached
       if (toolCallRound >= this.maxToolCalls) {
+        this.logger.warn(
+          `AI tool call limit reached (${this.maxToolCalls}) for merchant ${merchantId}`,
+        );
         throw new RpcException({
           code: AppErrorCode.AI_TOOL_CALL_LIMIT_REACHED,
           message: `Batas iterasi pemanggilan data analitik (${this.maxToolCalls} kali) telah tercapai.`,
@@ -54,6 +57,11 @@ export class AiService {
       }
 
       toolCallRound++;
+      this.logger.log(
+        `Round ${toolCallRound}: AI requested ${response.functionCalls.length} tool(s): ${response.functionCalls
+          .map((f) => `${f.name}(${JSON.stringify(f.args)})`)
+          .join(', ')}`,
+      );
 
       // 1. Record full model turn (preserving text, thoughts, and function calls)
       contents.push(

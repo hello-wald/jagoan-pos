@@ -9,7 +9,7 @@ export const analyticsEnvSchema = z.object({
   ANALYTICS_TCP_PORT: z.coerce.number().int().min(1).max(65535).default(4005),
 
   GEMINI_API_KEY: z.string().min(1, 'GEMINI_API_KEY is required'),
-  GEMINI_MODEL: z.string().min(1).default('gemini-2.5-flash-lite'),
+  GEMINI_MODEL: z.string().min(1).default('gemini-3.5-flash-lite'),
   AI_MAX_TOOL_CALLS: z.coerce.number().int().min(1).max(3).default(3),
   AI_MAX_MESSAGE_LENGTH: z.coerce.number().int().min(100).max(4000).default(2000),
   AI_MAX_RANGE_DAYS: z.coerce.number().int().min(1).max(366).default(92),
