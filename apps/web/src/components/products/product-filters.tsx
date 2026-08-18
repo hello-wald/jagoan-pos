@@ -66,7 +66,7 @@ export function ProductFilters() {
         id="product-status"
         value={status}
         onChange={(event) => onStatusChange(event.target.value)}
-        className="h-11 rounded-[--radius-control] border border-line bg-surface px-3 text-sm text-ink"
+        className="h-11 rounded-control border border-line bg-surface px-3 text-sm text-ink"
       >
         <option value="all">Semua status</option>
         <option value="active">Aktif</option>

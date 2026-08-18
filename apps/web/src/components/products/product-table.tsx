@@ -34,7 +34,7 @@ export function ProductTable({ params }: { params: ProductListParams }) {
 
   if (isPending) {
     return (
-      <div className="divide-y divide-line rounded-[--radius-panel] border border-line bg-surface">
+      <div className="divide-y divide-line rounded-panel border border-line bg-surface">
         {Array.from({ length: 8 }, (_, i) => (
           <div key={i} className="flex h-[52px] items-center gap-4 px-4">
             <Skeleton className="h-4 flex-[3]" />
@@ -68,7 +68,7 @@ export function ProductTable({ params }: { params: ProductListParams }) {
         action={
           <Link
             href="/admin/products"
-            className="inline-flex h-9 items-center rounded-[--radius-control] border border-line bg-surface px-3 text-[13px] font-medium"
+            className="inline-flex h-9 items-center rounded-control border border-line bg-surface px-3 text-[13px] font-medium"
           >
             Hapus filter
           </Link>
@@ -81,7 +81,7 @@ export function ProductTable({ params }: { params: ProductListParams }) {
         action={
           <Link
             href={NEW_PRODUCT_ROUTE}
-            className="inline-flex h-11 items-center rounded-[--radius-control] bg-accent px-5 text-sm font-medium text-ink"
+            className="inline-flex h-11 items-center rounded-control bg-accent px-5 text-sm font-medium text-ink"
           >
             Tambah Produk
           </Link>
@@ -94,7 +94,7 @@ export function ProductTable({ params }: { params: ProductListParams }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="overflow-hidden rounded-[--radius-panel] border border-line bg-surface">
+      <div className="overflow-hidden rounded-panel border border-line bg-surface">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line">
@@ -170,10 +170,7 @@ function Pagination({ page, pages }: { page: number; pages: number }) {
   return (
     <div className="flex items-center gap-2">
       {page > 1 ? (
-        <Link
-          href={href(page - 1)}
-          className="rounded-[--radius-control] px-3 py-1.5 hover:bg-paper"
-        >
+        <Link href={href(page - 1)} className="rounded-control px-3 py-1.5 hover:bg-paper">
           Sebelumnya
         </Link>
       ) : null}
@@ -181,10 +178,7 @@ function Pagination({ page, pages }: { page: number; pages: number }) {
         {page} / {pages}
       </span>
       {page < pages ? (
-        <Link
-          href={href(page + 1)}
-          className="rounded-[--radius-control] px-3 py-1.5 hover:bg-paper"
-        >
+        <Link href={href(page + 1)} className="rounded-control px-3 py-1.5 hover:bg-paper">
           Berikutnya
         </Link>
       ) : null}

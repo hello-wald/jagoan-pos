@@ -10,7 +10,7 @@ export default function ForbiddenPage() {
       </p>
       <Link
         href="/"
-        className="mt-8 inline-flex h-11 w-fit items-center rounded-[--radius-control] bg-accent px-5 font-medium text-ink transition-transform duration-150 active:scale-[0.98]"
+        className="mt-8 inline-flex h-11 w-fit items-center rounded-control bg-accent px-5 font-medium text-ink transition-transform duration-150 active:scale-[0.98]"
       >
         Kembali ke beranda
       </Link>

@@ -26,7 +26,7 @@ export function Sidebar({ role }: { role: UserRole }) {
           <Link
             key={item.href}
             href={item.href}
-            className="rounded-[--radius-control] px-3 py-2 text-sm text-ink-2 transition-colors duration-150 hover:bg-paper hover:text-ink"
+            className="rounded-control px-3 py-2 text-sm text-ink-2 transition-colors duration-150 hover:bg-paper hover:text-ink"
           >
             {item.label}
           </Link>

@@ -11,7 +11,7 @@ export function Badge({ tone, children }: { tone: keyof typeof TONES; children: 
   const { cls, Icon } = TONES[tone];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-[--radius-badge] border px-2 py-1 text-[11px] font-medium ${cls}`}
+      className={`inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[11px] font-medium ${cls}`}
     >
       <Icon size={13} weight="regular" aria-hidden />
       {children}

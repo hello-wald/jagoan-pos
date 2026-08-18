@@ -55,7 +55,7 @@ export default async function ProductsPage({
             anchor is invalid nesting and breaks keyboard semantics. */}
         <Link
           href={NEW_PRODUCT_ROUTE}
-          className="inline-flex h-11 shrink-0 items-center rounded-[--radius-control] bg-accent px-5 text-sm font-medium text-ink transition-transform duration-150 active:scale-[0.98]"
+          className="inline-flex h-11 shrink-0 items-center rounded-control bg-accent px-5 text-sm font-medium text-ink transition-transform duration-150 active:scale-[0.98]"
         >
           Tambah Produk
         </Link>

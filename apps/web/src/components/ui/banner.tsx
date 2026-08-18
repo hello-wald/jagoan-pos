@@ -15,7 +15,7 @@ export function Banner({
 }) {
   const { cls, Icon } = TONES[tone];
   return (
-    <div role="alert" className={`flex gap-2.5 rounded-[--radius-panel] border p-3 text-[13px] ${cls}`}>
+    <div role="alert" className={`flex gap-2.5 rounded-panel border p-3 text-[13px] ${cls}`}>
       <Icon size={18} weight="regular" className="mt-px shrink-0" aria-hidden />
       <span>{children}</span>
     </div>
