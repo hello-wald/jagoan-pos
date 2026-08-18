@@ -48,7 +48,6 @@ export class LlmClient {
         config: {
           systemInstruction: buildSystemPrompt(),
           tools: sdkTools.length > 0 ? [{ functionDeclarations: sdkTools }] : undefined,
-          temperature: 0.2,
           maxOutputTokens: 1024,
         },
       });
@@ -56,6 +55,7 @@ export class LlmClient {
       const functionCalls = (response.functionCalls ?? []).map((fc) => ({
         name: fc.name ?? '',
         args: (fc.args as Record<string, unknown>) ?? {},
+        id: (fc as unknown as { id?: string }).id,
       }));
 
       const candidateContent = response.candidates?.[0]?.content;
@@ -68,6 +68,7 @@ export class LlmClient {
               part.functionCall = {
                 name: p.functionCall.name ?? '',
                 args: (p.functionCall.args as Record<string, unknown>) ?? {},
+                id: (p.functionCall as unknown as { id?: string }).id,
                 ...((p.functionCall as unknown as Record<string, unknown>) ?? {}),
               };
             }

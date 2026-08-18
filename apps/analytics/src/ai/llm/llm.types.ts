@@ -1,6 +1,7 @@
 export interface LlmFunctionCall {
   name: string;
   args: Record<string, unknown>;
+  id?: string;
   [key: string]: unknown;
 }
 
@@ -12,6 +13,7 @@ export interface LlmPart {
   functionResponse?: {
     name: string;
     response: Record<string, unknown>;
+    id?: string;
   };
   [key: string]: unknown;
 }

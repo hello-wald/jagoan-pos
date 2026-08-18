@@ -427,5 +427,25 @@ describe('AiService', () => {
       // 4 LLM generate calls (round 0, 1, 2, 3)
       expect(llmClientMock.generate).toHaveBeenCalledTimes(4);
     });
+
+    it('rejects message exceeding AI_MAX_MESSAGE_LENGTH with AI_TOOL_ARGUMENTS_INVALID', async () => {
+      const oversizedMessage = 'a'.repeat(2001);
+
+      let thrownError: unknown;
+      try {
+        await service.chat({ merchantId, message: oversizedMessage });
+      } catch (err) {
+        thrownError = err;
+      }
+
+      expect(thrownError).toBeInstanceOf(RpcException);
+      expect((thrownError as RpcException).getError()).toEqual(
+        expect.objectContaining({
+          code: AppErrorCode.AI_TOOL_ARGUMENTS_INVALID,
+        }),
+      );
+      expect(llmClientMock.generate).not.toHaveBeenCalled();
+    });
   });
 });
+

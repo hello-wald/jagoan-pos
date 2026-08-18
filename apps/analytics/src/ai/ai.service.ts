@@ -11,6 +11,7 @@ import type { AnalyticsToolName } from './tools/tool-registry';
 @Injectable()
 export class AiService {
   private readonly maxToolCalls: number;
+  private readonly maxMessageLength: number;
   private readonly logger = new Logger(AiService.name);
 
   constructor(
@@ -19,10 +20,18 @@ export class AiService {
     config: ConfigService<AnalyticsEnv, true>,
   ) {
     this.maxToolCalls = config.get('AI_MAX_TOOL_CALLS', { infer: true }) ?? 3;
+    this.maxMessageLength = config.get('AI_MAX_MESSAGE_LENGTH', { infer: true }) ?? 2000;
   }
 
   async chat(request: AiChatRequest): Promise<AiChatResponse> {
     const { merchantId, message } = request;
+
+    if (message.length > this.maxMessageLength) {
+      throw new RpcException({
+        code: AppErrorCode.AI_TOOL_ARGUMENTS_INVALID,
+        message: `Pesan melebihi batas panjang maksimum (${this.maxMessageLength} karakter).`,
+      });
+    }
 
     const contents: LlmContent[] = [
       {
@@ -89,6 +98,7 @@ export class AiService {
             functionResponse: {
               name: fc.name,
               response: (result.data ?? {}) as Record<string, unknown>,
+              id: fc.id,
             },
           });
         } catch (error) {

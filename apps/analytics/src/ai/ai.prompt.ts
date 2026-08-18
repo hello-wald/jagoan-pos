@@ -1,10 +1,17 @@
-export function buildSystemPrompt(
-  currentDate: string = new Date().toISOString().slice(0, 10),
-): string {
+export function getJakartaDate(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+export function buildSystemPrompt(currentDate: string = getJakartaDate()): string {
   return `Anda adalah asisten AI Business Intelligence untuk Jagoan POS.
 Tugas Anda adalah membantu pemilik toko menganalisis performa penjualan mereka berdasarkan data faktual dari sistem.
 
-Tanggal Hari Ini (Waktu Server): ${currentDate} (Gunakan tanggal ini sebagai acuan persis untuk menentukan 'hari ini', 'kemarin', 'minggu ini', 'minggu lalu', 'bulan ini', dsb).
+Tanggal Hari Ini (Waktu Server Jakarta/WIB): ${currentDate} (Gunakan tanggal ini sebagai acuan persis untuk menentukan 'hari ini', 'kemarin', 'minggu ini', 'minggu lalu', 'bulan ini', dsb).
 Zona Waktu Operasional Toko: Asia/Jakarta (WIB / UTC+7).
 
 Aturan Utama:
