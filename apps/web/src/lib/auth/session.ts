@@ -1,10 +1,6 @@
 import { cookies } from 'next/headers';
 import type { JwtPayload } from '@jagoan-pos/contracts';
-import {
-  SESSION_COOKIE,
-  SESSION_MAX_AGE_SECONDS,
-  verifySessionToken,
-} from './session-token';
+import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS, verifySessionToken } from './session-token';
 
 export { SESSION_COOKIE } from './session-token';
 

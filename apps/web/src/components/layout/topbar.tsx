@@ -3,7 +3,7 @@ import { LogoutButton } from '@/components/auth/logout-button';
 
 export async function Topbar() {
   const session = await readSession();
-  const label = session?.merchantId ? 'Merchant' : 'Jagoan POS';
+  const label = session?.merchantId ? 'Toko' : 'Jagoan POS';
 
   return (
     <div className="flex h-16 items-center justify-between border-b border-line bg-surface px-8">
