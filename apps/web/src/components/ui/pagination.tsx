@@ -21,7 +21,7 @@ export function Pagination({
   totalItems,
   pageSize,
   onPageSizeChange,
-  pageSizeOptions = [10, 20, 50],
+  pageSizeOptions = [5,10, 20, 50],
 }: PaginationProps) {
   const safeTotalPages = Math.max(1, totalPages);
   const isFirstPage = currentPage <= 1;
