@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { TransactionsView } from './transactions-view';
-import * as ownerTransactionsApi from '@/lib/api/owner-transactions';
+import * as ownerTransactionsApi from '@/lib/api/owner';
 import type { PaginatedSales, Sale } from '@jagoan-pos/contracts';
 
-vi.mock('@/lib/api/owner-transactions');
+vi.mock('@/lib/api/owner', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/api/owner')>();
+  return {
+    ...actual,
+  };
+});
 
 const mockSales: Sale[] = [
   {

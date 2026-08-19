@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { AiInsightView } from './ai-insight-view';
-import * as ownerAiApi from '@/lib/api/owner-ai';
+import * as ownerAiApi from '@/lib/api/owner';
 import type { AiChatResponse } from '@jagoan-pos/contracts';
 
-vi.mock('@/lib/api/owner-ai');
+vi.mock('@/lib/api/owner');
 
 describe('AiInsightView', () => {
   const mutateAsyncMock = vi.fn();

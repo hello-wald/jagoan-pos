@@ -4,20 +4,19 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { Sparkle } from '@phosphor-icons/react';
-import { useOwnerDashboardData, type OwnerDatePreset } from '@/lib/api/owner-reports';
-import { useTransactions } from '@/lib/api/owner-transactions';
+import { useOwnerDashboardData, useTransactions, type OwnerDatePreset } from '@/lib/api/owner';
 import { formatDateTimeWib } from '@/lib/format/date';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { OwnerPageHeader } from './owner-page-header';
+import { OwnerPageHeader } from '../owner-page-header';
 import {
   DashboardMetrics,
   HourlyPatternCard,
   RecentTransactionsCard,
   SalesTrendCard,
   TopProductsCard,
-} from './dashboard';
+} from './index';
 
 const PRESETS: { value: OwnerDatePreset; label: string }[] = [
   { value: 'TODAY', label: 'Hari Ini' },

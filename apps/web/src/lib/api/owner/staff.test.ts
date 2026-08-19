@@ -2,11 +2,11 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import { useCashiers, useCreateCashier, useSetCashierActive, ownerStaffKeys } from './owner-staff';
-import * as bffClient from './bff-client';
+import { useCashiers, useCreateCashier, useSetCashierActive, ownerStaffKeys } from './staff';
+import * as bffClient from '../bff-client';
 import { AppErrorCode, type CashierListResult, type UserSummary } from '@jagoan-pos/contracts';
 
-vi.mock('./bff-client');
+vi.mock('../bff-client');
 
 const initialCashiers: CashierListResult = {
   data: [

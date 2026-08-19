@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { StaffView } from '@/components/owner/staff-view';
+import { StaffView } from '@/components/owner/staff/staff-view';
 
 export const metadata: Metadata = {
   title: 'Manajemen Kasir & Staf | Jagoan POS',

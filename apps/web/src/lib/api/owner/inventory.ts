@@ -8,10 +8,10 @@ import type {
   InventorySummary,
   PaginatedMerchantStock,
 } from '@jagoan-pos/contracts';
-import { bffFetch } from './bff-client';
-import { buildInventoryQuery, ownerInventoryKeys } from './owner.shared';
+import { bffFetch } from '../bff-client';
+import { buildInventoryQuery, ownerInventoryKeys } from './shared';
 
-export { ownerInventoryKeys, buildInventoryQuery } from './owner.shared';
+export { ownerInventoryKeys, buildInventoryQuery } from './shared';
 
 export function useInventorySummary() {
   return useQuery({

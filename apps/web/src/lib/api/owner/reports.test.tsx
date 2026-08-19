@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { useOwnerDashboardData } from './owner-reports';
-import * as bffClient from './bff-client';
+import { useOwnerDashboardData } from './reports';
+import * as bffClient from '../bff-client';
 
-vi.mock('./bff-client');
+vi.mock('../bff-client');
 
 function createWrapper() {
   const queryClient = new QueryClient({

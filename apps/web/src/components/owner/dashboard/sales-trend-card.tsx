@@ -1,8 +1,8 @@
 import { TrendUp } from '@phosphor-icons/react';
 import type { HourlyPoint, RevenuePoint } from '@jagoan-pos/contracts';
-import type { OwnerDatePreset } from '@/lib/api/owner.shared';
+import type { OwnerDatePreset } from '@/lib/api/owner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { SalesTrendChart } from '../sales-trend-chart';
+import { SalesTrendChart } from './sales-trend-chart';
 
 export type SalesTrendCardProps = {
   preset: OwnerDatePreset;

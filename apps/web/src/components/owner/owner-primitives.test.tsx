@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { OwnerPageHeader } from './owner-page-header';
 import { MetricCard } from './metric-card';
-import { SalesTrendChart } from './sales-trend-chart';
+import { SalesTrendChart } from './dashboard/sales-trend-chart';
 import { Modal } from '@/components/ui/modal';
 import { Pagination } from '@/components/ui/pagination';
 import { DataTable, type ColumnDef } from '@/components/ui/data-table';
