@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { useCashiers, useCreateCashier, useSetCashierActive, ownerStaffKeys } from './owner-staff';
 import * as bffClient from './bff-client';
-import type { CashierListResult, UserSummary } from '@jagoan-pos/contracts';
+import { AppErrorCode, type CashierListResult, type UserSummary } from '@jagoan-pos/contracts';
 
 vi.mock('./bff-client');
 
@@ -128,7 +128,7 @@ describe('owner-staff API hooks', () => {
 
     // 2. Reject the pending promise with plain AppError
     const appError = {
-      code: 'INTERNAL_ERROR',
+      code: AppErrorCode.INTERNAL_ERROR,
       status: 500,
       message: 'Koneksi database bermasalah',
     };

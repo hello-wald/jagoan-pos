@@ -12,7 +12,12 @@ import {
   Users,
   X,
 } from '@phosphor-icons/react';
-import type { CreateCashierInput, UserSummary } from '@jagoan-pos/contracts';
+import type {
+   AppErrorCode,
+   CreateCashierInput,
+   UserSummary,
+} from '@jagoan-pos/contracts';
+import { messageFor } from '@/lib/i18n/messages';
 import { useCashiers, useCreateCashier, useSetCashierActive } from '@/lib/api/owner-staff';
 import { formatDateWib } from '@/lib/format/date';
 import { Banner } from '@/components/ui/banner';
@@ -64,8 +69,9 @@ export function StaffView() {
         }.`,
       );
     } catch (err: unknown) {
-      const errObj = err as { message?: string } | null;
+      const errObj = err as { code?: AppErrorCode; message?: string } | null;
       const msg =
+        (errObj?.code ? messageFor(errObj.code) : null) ??
         errObj?.message ??
         (err instanceof Error ? err.message : 'Gagal mengubah status kasir.');
       setActionErrorMessage(msg);

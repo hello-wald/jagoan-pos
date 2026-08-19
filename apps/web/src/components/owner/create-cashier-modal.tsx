@@ -80,25 +80,25 @@ export function CreateCashierModal({
       await onSubmit(result.data);
       handleClose();
     } catch (err: unknown) {
-      const errObj = err as { code?: AppErrorCode | string; message?: string } | null;
+      const errObj = err as { code?: AppErrorCode; message?: string } | null;
       const code = errObj?.code;
-      const msg =
-        errObj?.message ??
-        (err instanceof Error ? err.message : 'Gagal mendaftarkan kasir baru.');
+      const rawMsg = errObj?.message ?? (err instanceof Error ? err.message : '');
 
       if (
         code === AppErrorCode.EMAIL_ALREADY_EXISTS ||
-        code === 'EMAIL_ALREADY_EXISTS' ||
-        msg.includes(AppErrorCode.EMAIL_ALREADY_EXISTS) ||
-        msg.toLowerCase().includes('email already exists') ||
-        msg.toLowerCase().includes('email sudah terdaftar')
+        rawMsg.includes(AppErrorCode.EMAIL_ALREADY_EXISTS) ||
+        rawMsg.toLowerCase().includes('email already exists') ||
+        rawMsg.toLowerCase().includes('email sudah terdaftar')
       ) {
         setFieldErrors((prev) => ({
           ...prev,
           email: messageFor(AppErrorCode.EMAIL_ALREADY_EXISTS),
         }));
       } else {
-        setServerError(msg);
+        const localizedMsg =
+          (code ? messageFor(code) : null) ??
+          (rawMsg || 'Gagal mendaftarkan kasir baru.');
+        setServerError(localizedMsg);
       }
     }
   };

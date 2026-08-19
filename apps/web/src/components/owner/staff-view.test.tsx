@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { StaffView } from './staff-view';
 import * as ownerStaffApi from '@/lib/api/owner-staff';
-import type { CashierListResult, UserSummary } from '@jagoan-pos/contracts';
+import { AppErrorCode, type CashierListResult, type UserSummary } from '@jagoan-pos/contracts';
 
 vi.mock('@/lib/api/owner-staff');
 
@@ -169,7 +169,7 @@ describe('StaffView', () => {
   it('handles EMAIL_ALREADY_EXISTS error object from BFF in create modal', async () => {
     // Rejects with plain AppError object as thrown by bffFetch
     createCashierMock.mockRejectedValueOnce({
-      code: 'EMAIL_ALREADY_EXISTS',
+      code: AppErrorCode.EMAIL_ALREADY_EXISTS,
       status: 400,
       message: 'Email address is already registered',
     });
@@ -224,11 +224,11 @@ describe('StaffView', () => {
   });
 
   it('handles toggle failure gracefully and displays error banner with AppError message', async () => {
-    // Rejects with plain AppError object as thrown by bffFetch
+    // Rejects with plain AppError object as thrown by bffFetch (e.g. CASHIER_NOT_FOUND)
     setCashierActiveMock.mockRejectedValueOnce({
-      code: 'INTERNAL_ERROR',
-      status: 500,
-      message: 'Koneksi server terputus',
+      code: AppErrorCode.CASHIER_NOT_FOUND,
+      status: 404,
+      message: 'Cashier not found',
     });
 
     render(<StaffView />);
@@ -237,7 +237,7 @@ describe('StaffView', () => {
     fireEvent.click(toggleSwitch);
 
     await waitFor(() => {
-      expect(screen.getByText('Koneksi server terputus')).toBeInTheDocument();
+      expect(screen.getByText('Kasir tidak ditemukan.')).toBeInTheDocument();
     });
   });
 
