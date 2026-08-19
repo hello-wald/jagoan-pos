@@ -24,10 +24,11 @@ export const PUBLIC_ROUTES = ['/login', '/register', '/forbidden'] as const;
 const ROUTE_ROLES: ReadonlyArray<[RegExp, readonly UserRole[]]> = [
   [/^\/admin(\/|$)/, ['GLOBAL_ADMIN']],
   [/^\/dashboard(\/|$)/, ['OWNER']],
-  [/^\/reports(\/|$)/, ['OWNER']],
-  [/^\/insights(\/|$)/, ['OWNER']],
   [/^\/inventory(\/|$)/, ['OWNER']],
-  [/^\/team(\/|$)/, ['OWNER']],
+  [/^\/staff(\/|$)/, ['OWNER']],
+  [/^\/insights(\/|$)/, ['OWNER']],
+  [/^\/transactions(\/|$)/, ['OWNER']],
+  [/^\/profile(\/|$)/, ['OWNER']],
   [/^\/checkout(\/|$)/, ['CASHIER']],
 ];
 
