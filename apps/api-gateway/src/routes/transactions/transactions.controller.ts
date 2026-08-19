@@ -28,6 +28,7 @@ export class TransactionsController {
   constructor(private readonly transactions: TransactionsClient) {}
 
   @Post('checkout')
+  @Roles('CASHIER')
   @ApiOperation({ summary: 'Checkout sale transaction' })
   checkout(@CurrentUser() user: AuthUser, @Body() dto: CheckoutDto): Promise<Sale> {
     const { merchantId, merchantName } = requireMerchant(user);
