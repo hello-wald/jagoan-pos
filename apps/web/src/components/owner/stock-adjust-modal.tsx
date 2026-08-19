@@ -10,7 +10,8 @@ import {
   TrendDown,
   TrendUp,
 } from '@phosphor-icons/react';
-import type { MerchantStockItem } from '@jagoan-pos/contracts';
+import type { AppErrorCode, MerchantStockItem } from '@jagoan-pos/contracts';
+import { messageFor } from '@/lib/i18n/messages';
 import { formatIdr } from '@/lib/format/currency';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
@@ -70,7 +71,11 @@ export function StockAdjustModal({
       await onSave(item.productId, parsed);
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal menyesuaikan stok produk.';
+      const errObj = err as { code?: AppErrorCode; message?: string } | null;
+      const msg =
+        (errObj?.code ? messageFor(errObj.code) : null) ??
+        errObj?.message ??
+        (err instanceof Error ? err.message : 'Gagal menyesuaikan stok produk.');
       setErrorMessage(msg);
     }
   };
