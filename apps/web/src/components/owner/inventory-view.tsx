@@ -88,7 +88,7 @@ export function InventoryView() {
     {
       header: 'Produk & SKU',
       accessor: (item) => (
-        <div className="flex flex-col gap-0.5 min-w-[160px]">
+        <div className="flex flex-col gap-0.5 min-w-40">
           <span className="font-semibold text-ink">{item.name}</span>
           <span className="font-mono text-xs text-ink-2">{item.sku}</span>
         </div>
