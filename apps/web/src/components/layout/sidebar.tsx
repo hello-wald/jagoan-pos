@@ -5,7 +5,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Route } from 'next';
 import type { UserRole } from '@jagoan-pos/contracts';
-import { CaretLeft, List, Package, X, type Icon } from '@phosphor-icons/react';
+import {
+  CaretLeft,
+  ChartBar,
+  List,
+  Package,
+  Receipt,
+  Sparkle,
+  Storefront,
+  Users,
+  X,
+  type Icon,
+} from '@phosphor-icons/react';
 import { LogoutButton } from '@/components/auth/logout-button';
 
 type NavItem = { href: Route; label: string; icon: Icon };
@@ -15,7 +26,14 @@ type NavItem = { href: Route; label: string; icon: Icon };
 // the page, so these are asserted once here instead of at each Link.
 const NAV: Record<UserRole, ReadonlyArray<NavItem>> = {
   GLOBAL_ADMIN: [{ href: '/admin/products' as Route, label: 'Katalog Produk', icon: Package }],
-  OWNER: [],
+  OWNER: [
+    { href: '/dashboard' as Route, label: 'Dashboard & Laporan', icon: ChartBar },
+    { href: '/transactions' as Route, label: 'Riwayat Transaksi', icon: Receipt },
+    { href: '/inventory' as Route, label: 'Stok Inventori', icon: Package },
+    { href: '/staff' as Route, label: 'Kelola Kasir', icon: Users },
+    { href: '/insights' as Route, label: 'AI Insight BI', icon: Sparkle },
+    { href: '/profile' as Route, label: 'Profil Toko', icon: Storefront },
+  ],
   CASHIER: [],
 };
 
