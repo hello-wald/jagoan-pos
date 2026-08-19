@@ -302,7 +302,6 @@ export function InventoryView() {
               setLimit(newLimit);
               setPage(1);
             }}
-            pageSizeOptions={[5, 10, 20, 50]}
           />
         ) : null}
       </div>
