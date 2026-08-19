@@ -106,7 +106,7 @@ export function StockAdjustModal({
                 <div className="mt-1 flex items-center">
                   <span
                     title={item.sku}
-                    className="max-w-[180px] truncate font-mono rounded bg-surface px-1.5 py-0.5 border border-line text-[11px] font-medium text-ink-2"
+                    className="max-w-45 truncate font-mono rounded bg-surface px-1.5 py-0.5 border border-line text-[11px] font-medium text-ink-2"
                   >
                     {item.sku}
                   </span>
