@@ -29,7 +29,7 @@ const MESSAGES: Record<AppErrorCode, string> = {
   [AppErrorCode.AI_TEMPORARILY_UNAVAILABLE]:
     'Layanan AI sedang tidak tersedia atau timeout. Coba lagi sebentar.',
   [AppErrorCode.AI_TOOL_NOT_ALLOWED]: 'Fitur atau alat analitik tidak diizinkan.',
-  [AppErrorCode.AI_TOOL_ARGUMENTS_INVALID]: 'Parameter analitik tidak valid.',
+  [AppErrorCode.AI_TOOL_ARGUMENTS_INVALID]: 'Parameter analitik tidak valid atau rentang tanggal melebihi batas 92 hari.',
   [AppErrorCode.AI_TOOL_CALL_LIMIT_REACHED]:
     'Batas pemanggilan data analitik telah tercapai. Coba ajukan pertanyaan yang lebih spesifik.',
   [AppErrorCode.INTERNAL_ERROR]: 'Terjadi kesalahan. Coba lagi.',

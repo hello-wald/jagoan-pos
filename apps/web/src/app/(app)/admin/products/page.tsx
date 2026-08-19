@@ -2,7 +2,7 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { cookies } from 'next/headers';
 import type { Route } from 'next';
 import { makeQueryClient } from '@/lib/query/client';
-import { buildListQuery, productKeys, type ProductListParams } from '@/lib/api/products';
+import { buildListQuery, productKeys, type ProductListParams } from '@/lib/api/products.shared';
 import { SESSION_COOKIE } from '@/lib/auth/session';
 import { ProductFilters } from '@/components/products/product-filters';
 import { ProductTable } from '@/components/products/product-table';
