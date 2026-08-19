@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { TransactionsView } from '@/components/owner/transactions-view';
+import { TransactionsView } from '@/components/owner/transactions/transactions-view';
 
 export const metadata: Metadata = {
   title: 'Riwayat Transaksi | Jagoan POS',

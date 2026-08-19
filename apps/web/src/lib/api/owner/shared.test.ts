@@ -4,7 +4,7 @@ import {
   buildTransactionsQuery,
   getMonthComparisonRanges,
   getPresetDateRange,
-} from './owner.shared';
+} from './shared';
 
 describe('owner.shared query helpers', () => {
   describe('getPresetDateRange', () => {

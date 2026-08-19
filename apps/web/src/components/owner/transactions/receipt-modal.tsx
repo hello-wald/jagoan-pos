@@ -7,7 +7,7 @@ import {
   User,
   XCircle,
 } from '@phosphor-icons/react';
-import { useTransaction } from '@/lib/api/owner-transactions';
+import { useTransaction } from '@/lib/api/owner';
 import { formatIdr } from '@/lib/format/currency';
 import { formatDateTimeWib } from '@/lib/format/date';
 import { Button } from '@/components/ui/button';

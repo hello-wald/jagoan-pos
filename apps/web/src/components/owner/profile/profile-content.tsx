@@ -15,12 +15,12 @@ import {
   ArrowClockwise,
 } from '@phosphor-icons/react';
 import type { Route } from 'next';
-import { useCurrentUser } from '@/lib/api/owner-profile';
+import { useCurrentUser } from '@/lib/api/owner';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Banner } from '@/components/ui/banner';
-import { OwnerPageHeader } from './owner-page-header';
+import { OwnerPageHeader } from '../owner-page-header';
 
 type QuickLink = {
   href: Route;

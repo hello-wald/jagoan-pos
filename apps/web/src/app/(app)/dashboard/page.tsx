@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { DashboardView } from '@/components/owner/dashboard-view';
+import { DashboardView } from '@/components/owner/dashboard/dashboard-view';
 
 export const metadata: Metadata = {
   title: 'Dashboard & Laporan | Jagoan POS',

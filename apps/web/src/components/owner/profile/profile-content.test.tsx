@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import * as ownerProfileApi from '@/lib/api/owner-profile';
+import * as ownerProfileApi from '@/lib/api/owner';
 import type { AuthUser } from '@jagoan-pos/contracts';
 import { ProfileContent } from './profile-content';
 

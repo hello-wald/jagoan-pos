@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { InventoryView } from '@/components/owner/inventory-view';
+import { InventoryView } from '@/components/owner/inventory/inventory-view';
 
 export const metadata: Metadata = {
   title: 'Manajemen Inventori & Stok | Jagoan POS',

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { DashboardView } from './dashboard-view';
-import * as ownerReportsApi from '@/lib/api/owner-reports';
-import * as ownerTransactionsApi from '@/lib/api/owner-transactions';
+import * as ownerReportsApi from '@/lib/api/owner';
+import * as ownerTransactionsApi from '@/lib/api/owner';
 import type {
   DashboardTotals,
   HourlySales,
@@ -11,8 +11,7 @@ import type {
   Sale,
 } from '@jagoan-pos/contracts';
 
-vi.mock('@/lib/api/owner-reports');
-vi.mock('@/lib/api/owner-transactions');
+vi.mock('@/lib/api/owner');
 
 const mockDashboard: DashboardTotals = {
   day: '2026-08-19',

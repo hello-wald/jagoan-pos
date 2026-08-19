@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { StaffView } from './staff-view';
-import * as ownerStaffApi from '@/lib/api/owner-staff';
+import * as ownerStaffApi from '@/lib/api/owner';
 import { AppErrorCode, type CashierListResult, type UserSummary } from '@jagoan-pos/contracts';
 
-vi.mock('@/lib/api/owner-staff');
+vi.mock('@/lib/api/owner');
 
 const mockCashiers: UserSummary[] = [
   {

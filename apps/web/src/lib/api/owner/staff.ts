@@ -7,10 +7,10 @@ import type {
   SetCashierActiveInput,
   UserSummary,
 } from '@jagoan-pos/contracts';
-import { bffFetch } from './bff-client';
-import { ownerStaffKeys } from './owner.shared';
+import { bffFetch } from '../bff-client';
+import { ownerStaffKeys } from './shared';
 
-export { ownerStaffKeys } from './owner.shared';
+export { ownerStaffKeys } from './shared';
 
 export function useCashiers() {
   return useQuery({

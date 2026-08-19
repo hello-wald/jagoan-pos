@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { InventoryView } from './inventory-view';
-import * as ownerInventoryApi from '@/lib/api/owner-inventory';
+import * as ownerInventoryApi from '@/lib/api/owner';
 import type { InventorySummary, MerchantStockItem } from '@jagoan-pos/contracts';
 
-vi.mock('@/lib/api/owner-inventory');
+vi.mock('@/lib/api/owner');
 
 const mockSummary: InventorySummary = {
   totalProducts: 12,

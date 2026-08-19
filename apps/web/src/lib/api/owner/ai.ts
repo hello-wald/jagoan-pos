@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import type { AiChatMessage, AiChatResponse } from '@jagoan-pos/contracts';
-import { bffFetch } from './bff-client';
+import { bffFetch } from '../bff-client';
 
 export function useAiChat() {
   return useMutation({

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { AiInsightView } from '@/components/owner/ai-insight-view';
+import { AiInsightView } from '@/components/owner/insights/ai-insight-view';
 
 export const metadata: Metadata = {
   title: 'AI Insight Assistant | Jagoan POS',

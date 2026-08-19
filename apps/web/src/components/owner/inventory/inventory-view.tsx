@@ -12,7 +12,7 @@ import {
   X,
 } from '@phosphor-icons/react';
 import type { MerchantStockItem } from '@jagoan-pos/contracts';
-import { useAdjustStock, useInventoryList, useInventorySummary } from '@/lib/api/owner-inventory';
+import { useAdjustStock, useInventoryList, useInventorySummary } from '@/lib/api/owner';
 import { formatIdr } from '@/lib/format/currency';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
@@ -22,8 +22,8 @@ import { SelectMenu } from '@/components/ui/select-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useDebounce } from '@/hooks/use-debounce';
-import { MetricCard } from './metric-card';
-import { OwnerPageHeader } from './owner-page-header';
+import { MetricCard } from '../metric-card';
+import { OwnerPageHeader } from '../owner-page-header';
 import { StockAdjustModal } from './stock-adjust-modal';
 
 export type CatalogStatusFilterType = 'ALL' | 'ACTIVE' | 'INACTIVE';

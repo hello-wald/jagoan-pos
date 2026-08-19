@@ -8,16 +8,16 @@ import type {
   RevenueRange,
   TopProducts,
 } from '@jagoan-pos/contracts';
-import { bffFetch } from './bff-client';
+import { bffFetch } from '../bff-client';
 import {
   getMonthComparisonRanges,
   getPresetDateRange,
   ownerReportKeys,
   type OwnerDatePreset,
-} from './owner.shared';
+} from './shared';
 
-export { ownerReportKeys, getPresetDateRange, getMonthComparisonRanges } from './owner.shared';
-export type { OwnerDatePreset } from './owner.shared';
+export { ownerReportKeys, getPresetDateRange, getMonthComparisonRanges } from './shared';
+export type { OwnerDatePreset } from './shared';
 
 export function useOwnerDashboardData(preset: OwnerDatePreset = 'TODAY') {
   // Midnight rollover tracking in Asia/Jakarta (WIB)

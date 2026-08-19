@@ -13,12 +13,12 @@ import {
   X,
 } from '@phosphor-icons/react';
 import type {
-   AppErrorCode,
-   CreateCashierInput,
-   UserSummary,
+  AppErrorCode,
+  CreateCashierInput,
+  UserSummary,
 } from '@jagoan-pos/contracts';
+import { useCashiers, useCreateCashier, useSetCashierActive } from '@/lib/api/owner';
 import { messageFor } from '@/lib/i18n/messages';
-import { useCashiers, useCreateCashier, useSetCashierActive } from '@/lib/api/owner-staff';
 import { formatDateWib } from '@/lib/format/date';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
@@ -27,8 +27,8 @@ import { SelectMenu } from '@/components/ui/select-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from '@/hooks/use-debounce';
 import { CreateCashierModal } from './create-cashier-modal';
-import { MetricCard } from './metric-card';
-import { OwnerPageHeader } from './owner-page-header';
+import { MetricCard } from '../metric-card';
+import { OwnerPageHeader } from '../owner-page-header';
 
 export type StaffStatusFilter = 'ALL' | 'ACTIVE' | 'INACTIVE';
 

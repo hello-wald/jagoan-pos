@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { HourlyPoint, RevenuePoint } from '@jagoan-pos/contracts';
 import { formatIdr } from '@/lib/format/currency';
-import type { OwnerDatePreset } from '@/lib/api/owner.shared';
+import type { OwnerDatePreset } from '@/lib/api/owner';
 
 export type ChartDataPoint = {
   key: string;

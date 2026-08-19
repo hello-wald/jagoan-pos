@@ -12,13 +12,13 @@ import {
   type AiChatResponse,
   type AppErrorCode,
 } from '@jagoan-pos/contracts';
-import { useAiChat } from '@/lib/api/owner-ai';
+import { useAiChat } from '@/lib/api/owner';
 import { messageFor } from '@/lib/i18n/messages';
 import { formatDateTimeWib } from '@/lib/format/date';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
 import { AiMarkdownMessage } from './ai-markdown-message';
-import { OwnerPageHeader } from './owner-page-header';
+import { OwnerPageHeader } from '../owner-page-header';
 
 export type ChatMessage = {
   id: string;
