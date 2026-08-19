@@ -1,0 +1,160 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: production-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  quality:
+    name: Quality checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+      - run: npm run prisma:generate
+      - run: npm run build:packages
+      - run: npm run typecheck
+      - run: npm test
+
+  build-and-push:
+    name: Build and push ${{ matrix.service }}
+    if: github.event_name != 'pull_request'
+    needs: quality
+    runs-on: ubuntu-latest
+    environment: production
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: api-gateway
+            dockerfile: apps/api-gateway/Dockerfile
+          - service: analytics
+            dockerfile: apps/analytics/Dockerfile
+          - service: core
+            dockerfile: apps/core/Dockerfile
+          - service: products
+            dockerfile: apps/products/Dockerfile
+          - service: transactions
+            dockerfile: apps/transactions/Dockerfile
+          - service: outbox-relay
+            dockerfile: apps/outbox-relay/Dockerfile
+          - service: reports
+            dockerfile: apps/reports/Dockerfile
+    env:
+      AR_HOST: ${{ vars.GCP_REGION }}-docker.pkg.dev
+      AR_REPOSITORY: ${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_ARTIFACT_REPOSITORY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          token_format: access_token
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.AR_HOST }}
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ env.AR_HOST }}/${{ env.AR_REPOSITORY }}/${{ matrix.service }}:${{ github.sha }}
+            ${{ env.AR_HOST }}/${{ env.AR_REPOSITORY }}/${{ matrix.service }}:main
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  migrate:
+    name: Production migrations
+    if: github.event_name != 'pull_request'
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+      - run: npm run prisma:generate
+      - run: npm run prisma:deploy --workspace=@jagoan-pos/core
+        env:
+          CORE_DIRECT_URL: ${{ secrets.CORE_DIRECT_URL }}
+      - run: npm run prisma:deploy --workspace=@jagoan-pos/products
+        env:
+          PRODUCTS_DIRECT_URL: ${{ secrets.PRODUCTS_DIRECT_URL }}
+      - run: npm run prisma:deploy --workspace=@jagoan-pos/transactions
+        env:
+          TRANSACTIONS_DIRECT_URL: ${{ secrets.TRANSACTIONS_DIRECT_URL }}
+      - run: npm run clickhouse:migrate --workspace=@jagoan-pos/reports
+        env:
+          CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}
+          CLICKHOUSE_DATABASE: ${{ secrets.CLICKHOUSE_DATABASE }}
+          CLICKHOUSE_USERNAME: ${{ secrets.CLICKHOUSE_USERNAME }}
+          CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
+          RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
+
+  deploy:
+    name: Roll out on GCE
+    if: github.event_name != 'pull_request'
+    needs: [build-and-push, migrate]
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      AR_HOST: ${{ vars.GCP_REGION }}-docker.pkg.dev
+      AR_REPOSITORY: ${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_ARTIFACT_REPOSITORY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Pull immutable images and restart the Compose stack
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          GCE_INSTANCE: ${{ vars.GCE_INSTANCE }}
+          GCE_ZONE: ${{ vars.GCE_ZONE }}
+          GCE_DEPLOY_PATH: ${{ vars.GCE_DEPLOY_PATH }}
+        run: |
+          gcloud compute ssh "$GCE_INSTANCE" \
+            --zone "$GCE_ZONE" \
+            --tunnel-through-iap \
+            --command "cd '$GCE_DEPLOY_PATH' && ./deploy/gcp/rollout.sh '$AR_HOST/$AR_REPOSITORY' '$IMAGE_TAG'"
