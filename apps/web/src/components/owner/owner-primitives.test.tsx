@@ -128,12 +128,7 @@ describe('DataTable', () => {
 
   it('renders loading skeletons when isLoading is true', () => {
     render(
-      <DataTable
-        columns={columns}
-        data={[]}
-        keyExtractor={(item) => item.id}
-        isLoading={true}
-      />,
+      <DataTable columns={columns} data={[]} keyExtractor={(item) => item.id} isLoading={true} />,
     );
     expect(screen.getByTestId('data-table-loading')).toBeInTheDocument();
   });
@@ -173,13 +168,7 @@ describe('DataTable', () => {
       { id: '1', name: 'Kopi Susu', qty: 10 },
       { id: '2', name: 'Roti Bakar', qty: 5 },
     ];
-    render(
-      <DataTable
-        columns={columns}
-        data={items}
-        keyExtractor={(item) => item.id}
-      />,
-    );
+    render(<DataTable columns={columns} data={items} keyExtractor={(item) => item.id} />);
     expect(screen.getByText('Kopi Susu')).toBeInTheDocument();
     expect(screen.getByText('Roti Bakar')).toBeInTheDocument();
     expect(screen.getByText('10')).toBeInTheDocument();
@@ -190,34 +179,35 @@ describe('DataTable', () => {
 describe('SalesTrendChart', () => {
   it('renders empty message when points are empty', () => {
     render(<SalesTrendChart points={[]} />);
-    expect(
-      screen.getByText('Belum ada data penjualan pada periode ini'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Belum ada data penjualan pada periode ini')).toBeInTheDocument();
   });
 
-  it('renders SVG chart and tooltip hint when points are provided', () => {
+  it('renders chart and tooltip hint when points are provided', () => {
+    const points = [
+      { day: '2026-08-18', revenue: 100000, transactions: 5, units: 10 },
+      { day: '2026-08-19', revenue: 200000, transactions: 8, units: 15 },
+    ];
+    render(<SalesTrendChart points={points} />);
+    expect(screen.getByText('Arahkan kursor ke grafik untuk detail harian')).toBeInTheDocument();
+  });
+
+  it('renders a responsive SVG that fills the container', () => {
     const points = [
       { day: '2026-08-18', revenue: 100000, transactions: 5, units: 10 },
       { day: '2026-08-19', revenue: 200000, transactions: 8, units: 15 },
     ];
     const { container } = render(<SalesTrendChart points={points} />);
-    expect(
-      screen.getByText('Arahkan kursor ke grafik untuk detail harian'),
-    ).toBeInTheDocument();
-    expect(container.querySelector('svg')).toBeInTheDocument();
+    const svg = container.querySelector('svg');
+
+    expect(screen.getByTestId('sales-trend-chart')).toHaveClass('w-full');
+    expect(svg).toBeInTheDocument();
   });
 
   it('renders comparison legend when comparisonPoints are provided', () => {
-    const points = [
-      { day: '2026-08-19', revenue: 200000, transactions: 8, units: 15 },
-    ];
-    const comparisonPoints = [
-      { day: '2026-07-19', revenue: 150000, transactions: 6, units: 12 },
-    ];
-    render(
-      <SalesTrendChart points={points} comparisonPoints={comparisonPoints} />,
-    );
-    expect(screen.getByText('Periode Ini')).toBeInTheDocument();
-    expect(screen.getByText('Periode Lalu')).toBeInTheDocument();
+    const points = [{ day: '2026-08-19', revenue: 200000, transactions: 8, units: 15 }];
+    const comparisonPoints = [{ day: '2026-07-19', revenue: 150000, transactions: 6, units: 12 }];
+    render(<SalesTrendChart points={points} comparisonPoints={comparisonPoints} />);
+    expect(screen.getByText('Bulan Ini')).toBeInTheDocument();
+    expect(screen.getByText('Bulan Lalu')).toBeInTheDocument();
   });
 });

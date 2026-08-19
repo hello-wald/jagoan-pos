@@ -9,7 +9,13 @@ export type MetricCardProps = {
   tone?: 'default' | 'accent' | 'success' | 'warning' | 'danger';
 };
 
-export function MetricCard({ label, value, description, icon: IconComponent, tone = 'default' }: MetricCardProps) {
+export function MetricCard({
+  label,
+  value,
+  description,
+  icon: IconComponent,
+  tone = 'default',
+}: MetricCardProps) {
   return (
     <Card className="flex flex-col justify-between gap-3 p-5">
       <div className="flex items-start justify-between gap-2">
@@ -26,11 +32,7 @@ export function MetricCard({ label, value, description, icon: IconComponent, ton
         {description ? (
           <span
             className={`text-xs ${
-              tone === 'danger'
-                ? 'text-danger'
-                : tone === 'success'
-                  ? 'text-success'
-                  : 'text-ink-2'
+              tone === 'danger' ? 'text-danger' : tone === 'success' ? 'text-success' : 'text-ink-2'
             }`}
           >
             {description}

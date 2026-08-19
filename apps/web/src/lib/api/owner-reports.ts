@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type {
   DashboardTotals,
@@ -19,14 +20,33 @@ export { ownerReportKeys, getPresetDateRange, getMonthComparisonRanges } from '.
 export type { OwnerDatePreset } from './owner.shared';
 
 export function useOwnerDashboardData(preset: OwnerDatePreset = 'TODAY') {
+  // Midnight rollover tracking in Asia/Jakarta (WIB)
+  const [dateAnchor, setDateAnchor] = useState<Date>(() => new Date());
+
+  useEffect(() => {
+    // Check every 30 seconds if the local WIB calendar day has changed
+    const interval = setInterval(() => {
+      const now = new Date();
+      const currentToday = getPresetDateRange('TODAY', now).from;
+      const anchoredToday = getPresetDateRange('TODAY', dateAnchor).from;
+      if (currentToday !== anchoredToday) {
+        setDateAnchor(now);
+      }
+    }, 30_000);
+
+    return () => clearInterval(interval);
+  }, [dateAnchor]);
+
   const isComparison = preset === 'MONTH_COMPARISON';
-  const comparisonRanges = isComparison ? getMonthComparisonRanges() : null;
-  const standardRange = !isComparison ? getPresetDateRange(preset) : comparisonRanges!.current;
+  const comparisonRanges = isComparison ? getMonthComparisonRanges(dateAnchor) : null;
+  const standardRange = !isComparison
+    ? getPresetDateRange(preset, dateAnchor)
+    : comparisonRanges!.current;
   const { from, to } = standardRange;
 
   // 1. Daily snapshot (only for TODAY)
   const dashboardQuery = useQuery({
-    queryKey: ownerReportKeys.dashboard,
+    queryKey: ownerReportKeys.dashboard(from),
     queryFn: () => bffFetch<DashboardTotals>('/reports/dashboard'),
     enabled: preset === 'TODAY',
   });
@@ -83,12 +103,39 @@ export function useOwnerDashboardData(preset: OwnerDatePreset = 'TODAY') {
     ]);
   };
 
+  // Safe conservative asOf calculation: if any active query is missing asOf, global asOf is undefined
+  const activeReports = [
+    preset === 'TODAY' ? dashboardQuery.data : { asOf: 'present' },
+    revenueQuery.data,
+    isComparison ? previousRevenueQuery.data : { asOf: 'present' },
+    topProductsQuery.data,
+    hourlyQuery.data,
+  ];
+
+  let asOf: string | undefined;
+  const allActiveHaveAsOf = activeReports.every((r) => r && typeof r.asOf === 'string' && r.asOf.length > 0);
+
+  if (allActiveHaveAsOf) {
+    const rawAsOfs = [
+      preset === 'TODAY' ? dashboardQuery.data?.asOf : undefined,
+      revenueQuery.data?.asOf,
+      isComparison ? previousRevenueQuery.data?.asOf : undefined,
+      topProductsQuery.data?.asOf,
+      hourlyQuery.data?.asOf,
+    ].filter(Boolean) as string[];
+
+    asOf = rawAsOfs.length > 0 ? rawAsOfs.sort()[0] : undefined;
+  }
+
   return {
     dashboard: dashboardQuery.data ?? null,
     revenue: revenueQuery.data ?? null,
     previousRevenue: previousRevenueQuery.data ?? null,
     topProducts: topProductsQuery.data ?? null,
     hourly: hourlyQuery.data ?? null,
+    activeRange: standardRange,
+    comparisonRanges,
+    asOf,
     isPending,
     isError,
     refetch,

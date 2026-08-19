@@ -104,7 +104,8 @@ export function buildTransactionsQuery(params: Partial<ListSalesQueryInput>): st
 
 export const ownerReportKeys = {
   all: ['owner', 'reports'] as const,
-  dashboard: ['owner', 'reports', 'dashboard'] as const,
+  dashboard: (date?: string) =>
+    date ? (['owner', 'reports', 'dashboard', date] as const) : (['owner', 'reports', 'dashboard'] as const),
   revenue: (from: string, to: string) => ['owner', 'reports', 'revenue', { from, to }] as const,
   topProducts: (params: { from: string; to: string; limit?: number; direction?: 'best' | 'worst' }) =>
     ['owner', 'reports', 'top-products', params] as const,
