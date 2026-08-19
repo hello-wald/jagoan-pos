@@ -1,5 +1,5 @@
 # Build from the repository root:
-# docker build -f apps/outbox-relay/Dockerfile -t jagoan-pos/outbox-relay:local .
+# docker build -f apps/analytics/Dockerfile -t jagoan-pos/analytics:local .
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 
@@ -7,6 +7,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
+# npm ci validates every workspace manifest, so keep this list in sync with apps/*.
 COPY package.json package-lock.json ./
 COPY apps/analytics/package.json apps/analytics/
 COPY apps/api-gateway/package.json apps/api-gateway/
@@ -23,11 +24,10 @@ RUN npm ci
 
 COPY tsconfig.base.json ./
 COPY packages ./packages
-COPY apps/outbox-relay ./apps/outbox-relay
+COPY apps/analytics ./apps/analytics
 
-# No prisma:generate — the relay reaches the outbox through pg, not Prisma.
 RUN npm run build:packages \
-  && npm run build --workspace=@jagoan-pos/outbox-relay \
+  && npm run build --workspace=@jagoan-pos/analytics \
   && npm prune --omit=dev
 
 FROM node:22-bookworm-slim AS runtime
@@ -39,10 +39,10 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/outbox-relay ./apps/outbox-relay
+COPY --from=builder /app/apps/analytics ./apps/analytics
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/package.json ./package.json
 
 USER node
-# No EXPOSE: the relay serves nothing, it only polls and publishes.
-CMD ["node", "apps/outbox-relay/dist/main.js"]
+EXPOSE 4005
+CMD ["node", "apps/analytics/dist/main.js"]
