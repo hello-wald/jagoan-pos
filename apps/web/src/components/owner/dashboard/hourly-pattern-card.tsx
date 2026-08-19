@@ -117,14 +117,33 @@ export function HourlyPatternCard({ hourly, className = '' }: HourlyPatternCardP
               })}
             </div>
 
-            <div className="flex justify-between border-t border-line pt-2 text-[10px] text-ink-2">
-              <span>00:00</span>
-              <span>04:00</span>
-              <span>08:00</span>
-              <span>12:00</span>
-              <span>16:00</span>
-              <span>20:00</span>
-              <span>23:00</span>
+            <div className="relative flex h-5 gap-1 border-t border-line pt-1.5 text-[10px] text-ink-2">
+              {hourly.hours.map((h) => {
+                const isFirst = h.hour === 0;
+                const isLast = h.hour === 23;
+                const isKeyHour = [0, 4, 8, 12, 16, 20, 23].includes(h.hour);
+                const isHovered = hoveredHour === h.hour;
+
+                if (!isKeyHour && !isHovered) {
+                  return <div key={h.hour} className="flex-1" />;
+                }
+
+                return (
+                  <div key={h.hour} className="relative flex-1">
+                    <span
+                      className={`absolute whitespace-nowrap transition-colors duration-150 ${
+                        isFirst
+                          ? 'left-0'
+                          : isLast
+                            ? 'right-0'
+                            : 'left-1/2 -translate-x-1/2 text-center'
+                      } ${isHovered ? 'font-semibold text-accent-deep' : 'text-ink-2'}`}
+                    >
+                      {String(h.hour).padStart(2, '0')}:00
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
