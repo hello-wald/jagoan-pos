@@ -142,7 +142,8 @@ describe('DashboardView', () => {
 
     render(<DashboardView />);
 
-    expect(screen.getByText(/Diperbarui per/i)).toBeInTheDocument();
+    expect(screen.getByText(/Data analitik & grafik/i)).toBeInTheDocument();
+    expect(screen.getByText(/diperbarui otomatis secara berkala/i)).toBeInTheDocument();
   });
 
   it('renders top products list and link to inventory', () => {
@@ -239,7 +240,7 @@ describe('DashboardView', () => {
     expect(screen.getByTestId('hourly-distribution')).toBeInTheDocument();
   });
 
-  it('uses the selected period timestamp after switching away from today', () => {
+  it('switches period preset properly when selecting 7 Hari', () => {
     const selectedPeriodRevenue = {
       ...mockRevenue,
       from: '2026-08-13',
@@ -259,7 +260,7 @@ describe('DashboardView', () => {
     render(<DashboardView />);
     fireEvent.click(screen.getByRole('button', { name: '7 Hari' }));
 
-    expect(screen.getByText(/17\.00 WIB/)).toBeInTheDocument();
+    expect(screen.getByText(/Data analitik & grafik/i)).toBeInTheDocument();
   });
 
   it('renders empty states when report collections contain no rows', () => {

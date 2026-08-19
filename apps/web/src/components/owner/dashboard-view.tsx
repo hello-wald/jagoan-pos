@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
-import { Clock, Sparkle } from '@phosphor-icons/react';
+import { Sparkle } from '@phosphor-icons/react';
 import { useOwnerDashboardData, type OwnerDatePreset } from '@/lib/api/owner-reports';
 import { useTransactions } from '@/lib/api/owner-transactions';
 import { formatDateTimeWib } from '@/lib/format/date';
@@ -116,10 +116,13 @@ export function DashboardView() {
 
       {/* asOf lag status banner / badge */}
       {formattedAsOf ? (
-        <div className="flex items-center gap-2 text-xs text-ink-2">
-          <Clock size={14} weight="regular" className="text-ink-2" />
+        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-line bg-surface/90 px-3.5 py-1 text-xs text-ink-2 shadow-2xs">
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+          </span>
           <span>
-            Diperbarui per: <strong className="font-medium text-ink">{formattedAsOf} WIB</strong>
+            <strong className="font-semibold text-ink">Data analitik & grafik</strong> diperbarui otomatis secara berkala
           </span>
         </div>
       ) : null}
