@@ -173,6 +173,7 @@ export class InventoryService {
           productId: p.id,
           name: p.name,
           sku: p.sku,
+          imageUrl: p.images[0]?.url ?? null,
           currentPrice: p.price,
           stockQuantity: inv?.stockQuantity ?? 0,
           isActive: p.isActive,
