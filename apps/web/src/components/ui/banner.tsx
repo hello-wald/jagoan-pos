@@ -1,9 +1,10 @@
-import { Info, Warning, WarningCircle } from '@phosphor-icons/react/dist/ssr';
+import { CheckCircle, Info, Warning, WarningCircle } from '@phosphor-icons/react/dist/ssr';
 
 const TONES = {
   danger: { cls: 'border-danger/30 bg-danger/5 text-danger', Icon: WarningCircle },
   warning: { cls: 'border-warning/30 bg-warning/5 text-warning', Icon: Warning },
   info: { cls: 'border-line bg-paper text-ink-2', Icon: Info },
+  success: { cls: 'border-success/30 bg-success/5 text-success', Icon: CheckCircle },
 } as const;
 
 export function Banner({
