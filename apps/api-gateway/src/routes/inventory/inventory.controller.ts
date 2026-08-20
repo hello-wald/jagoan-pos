@@ -38,12 +38,14 @@ export class InventoryController {
   }
 
   @Get()
+  @Roles('OWNER', 'CASHIER')
   getMerchantStock(
     @CurrentUser() user: AuthUser,
     @Query() query: GetMerchantStockQueryDto,
   ): Promise<PaginatedMerchantStock> {
     const { merchantId } = requireMerchant(user);
-    return this.transactions.send('inventory.getMerchantStock', { merchantId, query });
+    const scopedQuery = user.role === 'CASHIER' ? { ...query, activeOnly: true } : query;
+    return this.transactions.send('inventory.getMerchantStock', { merchantId, query: scopedQuery });
   }
 
   @Patch(':productId')
