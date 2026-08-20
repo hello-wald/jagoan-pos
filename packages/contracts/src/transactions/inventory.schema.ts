@@ -29,6 +29,7 @@ export interface MerchantStockItem {
   productId: string;
   sku: string;
   name: string;
+  imageUrl: string | null;
   currentPrice: number;
   stockQuantity: number;
   isActive: boolean;

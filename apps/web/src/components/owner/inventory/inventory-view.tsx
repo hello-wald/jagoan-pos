@@ -87,12 +87,35 @@ export function InventoryView() {
   const columns: ColumnDef<MerchantStockItem>[] = [
     {
       header: 'Produk & SKU',
-      accessor: (item) => (
-        <div className="flex flex-col gap-0.5 min-w-40">
-          <span className="font-semibold text-ink">{item.name}</span>
-          <span className="font-mono text-xs text-ink-2">{item.sku}</span>
-        </div>
-      ),
+      accessor: (item) => {
+        const thumbnail = item.imageUrl ? (
+          <img
+            src={item.imageUrl}
+            alt={item.name}
+            loading="lazy"
+            decoding="async"
+            className="h-10 w-10 shrink-0 rounded-control border border-line bg-paper object-cover"
+          />
+        ) : (
+          <div
+            role="img"
+            aria-label={`Tidak ada gambar untuk ${item.name}`}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-paper text-ink-2"
+          >
+            <Package size={18} weight="duotone" aria-hidden="true" />
+          </div>
+        );
+
+        return (
+          <div className="flex min-w-40 items-center gap-3">
+            {thumbnail}
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="truncate font-semibold text-ink">{item.name}</span>
+              <span className="font-mono text-xs text-ink-2">{item.sku}</span>
+            </div>
+          </div>
+        );
+      },
     },
     {
       header: 'Harga Satuan',

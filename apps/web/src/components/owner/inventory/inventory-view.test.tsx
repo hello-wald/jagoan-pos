@@ -13,11 +13,14 @@ const mockSummary: InventorySummary = {
   outOfStockCount: 1,
 };
 
+const PRODUCT_IMAGE_URL = 'https://cdn.example/products/kopi-susu-aren.png';
+
 const mockItems: MerchantStockItem[] = [
   {
     productId: 'prod-1',
     sku: 'KOP-001',
     name: 'Kopi Susu Aren',
+    imageUrl: PRODUCT_IMAGE_URL,
     currentPrice: 18000,
     stockQuantity: 25,
     isActive: true,
@@ -27,6 +30,7 @@ const mockItems: MerchantStockItem[] = [
     productId: 'prod-2',
     sku: 'TEA-002',
     name: 'Teh Melati',
+    imageUrl: null,
     currentPrice: 8000,
     stockQuantity: 5,
     isActive: true,
@@ -36,6 +40,7 @@ const mockItems: MerchantStockItem[] = [
     productId: 'prod-3',
     sku: 'CRS-003',
     name: 'Croissant Butter',
+    imageUrl: null,
     currentPrice: 22000,
     stockQuantity: 0,
     isActive: false,
@@ -102,11 +107,18 @@ describe('InventoryView', () => {
 
     expect(screen.getByText('Kopi Susu Aren')).toBeInTheDocument();
     expect(screen.getByText('KOP-001')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Kopi Susu Aren' })).toHaveAttribute(
+      'src',
+      PRODUCT_IMAGE_URL,
+    );
     expect(screen.getByText('Rp 18.000')).toBeInTheDocument();
     expect(screen.getByText('25 pcs')).toBeInTheDocument();
     expect(screen.getByText('Aman')).toBeInTheDocument();
 
     expect(screen.getByText('Teh Melati')).toBeInTheDocument();
+    expect(
+      screen.getByRole('img', { name: 'Tidak ada gambar untuk Teh Melati' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('Menipis')).toBeInTheDocument();
 
     expect(screen.getByText('Croissant Butter')).toBeInTheDocument();

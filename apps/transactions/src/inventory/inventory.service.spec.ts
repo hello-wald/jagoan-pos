@@ -21,6 +21,16 @@ const mockProduct1 = {
   category: 'Beverages',
   price: 18_000,
   isActive: true,
+  images: [
+    {
+      id: 'image-1',
+      url: 'https://cdn.example/products/kopi-susu.png',
+      contentType: 'image/png',
+      sizeBytes: 1234,
+      sortOrder: 0,
+      createdAt: '2026-08-01T00:00:00.000Z',
+    },
+  ],
   createdAt: new Date('2026-08-01T00:00:00.000Z'),
   updatedAt: new Date('2026-08-01T00:00:00.000Z'),
 };
@@ -32,6 +42,7 @@ const mockProduct2 = {
   category: 'Food',
   price: 15_000,
   isActive: true,
+  images: [],
   createdAt: new Date('2026-08-01T00:00:00.000Z'),
   updatedAt: new Date('2026-08-01T00:00:00.000Z'),
 };
@@ -134,6 +145,7 @@ describe('InventoryService', () => {
         productId: PRODUCT_1_ID,
         name: 'Kopi Susu',
         sku: 'KOP-001',
+        imageUrl: 'https://cdn.example/products/kopi-susu.png',
         currentPrice: 18_000,
         stockQuantity: 45,
         isActive: true,
@@ -145,6 +157,7 @@ describe('InventoryService', () => {
         productId: PRODUCT_2_ID,
         name: 'Roti Bakar',
         sku: 'ROT-001',
+        imageUrl: null,
         currentPrice: 15_000,
         stockQuantity: 0,
         isActive: true,
