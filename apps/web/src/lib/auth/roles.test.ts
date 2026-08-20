@@ -5,7 +5,7 @@ describe('homeForRole', () => {
   it('sends each role to its own landing route', () => {
     expect(homeForRole('GLOBAL_ADMIN')).toBe('/admin/products');
     expect(homeForRole('OWNER')).toBe('/dashboard');
-    expect(homeForRole('CASHIER')).toBe('/checkout');
+    expect(homeForRole('CASHIER')).toBe('/cashier/checkout');
   });
 });
 
@@ -24,6 +24,8 @@ describe('decideRoute', () => {
     expect(decideRoute('/insights', null)).toEqual({ kind: 'login' });
     expect(decideRoute('/transactions', null)).toEqual({ kind: 'login' });
     expect(decideRoute('/profile', null)).toEqual({ kind: 'login' });
+    expect(decideRoute('/cashier/checkout', null)).toEqual({ kind: 'login' });
+    expect(decideRoute('/cashier/transactions', null)).toEqual({ kind: 'login' });
   });
 
   it('allows the matching role', () => {
@@ -34,7 +36,8 @@ describe('decideRoute', () => {
     expect(decideRoute('/insights', 'OWNER')).toEqual({ kind: 'allow' });
     expect(decideRoute('/transactions', 'OWNER')).toEqual({ kind: 'allow' });
     expect(decideRoute('/profile', 'OWNER')).toEqual({ kind: 'allow' });
-    expect(decideRoute('/checkout', 'CASHIER')).toEqual({ kind: 'allow' });
+    expect(decideRoute('/cashier/checkout', 'CASHIER')).toEqual({ kind: 'allow' });
+    expect(decideRoute('/cashier/transactions', 'CASHIER')).toEqual({ kind: 'allow' });
   });
 
   it('forbids a mismatched role', () => {
@@ -51,6 +54,12 @@ describe('decideRoute', () => {
     ];
     for (const route of ownerRoutes) {
       expect(decideRoute(route, 'CASHIER')).toEqual({ kind: 'forbidden' });
+      expect(decideRoute(route, 'GLOBAL_ADMIN')).toEqual({ kind: 'forbidden' });
+    }
+
+    const cashierRoutes = ['/cashier/checkout', '/cashier/transactions'];
+    for (const route of cashierRoutes) {
+      expect(decideRoute(route, 'OWNER')).toEqual({ kind: 'forbidden' });
       expect(decideRoute(route, 'GLOBAL_ADMIN')).toEqual({ kind: 'forbidden' });
     }
   });

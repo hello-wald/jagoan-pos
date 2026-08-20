@@ -8,7 +8,7 @@ import type { UserRole } from '@jagoan-pos/contracts';
 const HOME_BY_ROLE: Record<UserRole, Route> = {
   GLOBAL_ADMIN: '/admin/products' as Route,
   OWNER: '/dashboard' as Route,
-  CASHIER: '/checkout' as Route,
+  CASHIER: '/cashier/checkout' as Route,
 };
 
 export function homeForRole(role: UserRole): Route {
@@ -29,7 +29,7 @@ const ROUTE_ROLES: ReadonlyArray<[RegExp, readonly UserRole[]]> = [
   [/^\/insights(\/|$)/, ['OWNER']],
   [/^\/transactions(\/|$)/, ['OWNER']],
   [/^\/profile(\/|$)/, ['OWNER']],
-  [/^\/checkout(\/|$)/, ['CASHIER']],
+  [/^\/cashier(\/|$)/, ['CASHIER']],
 ];
 
 export type RouteDecision = { kind: 'allow' } | { kind: 'login' } | { kind: 'forbidden' };
