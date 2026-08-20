@@ -24,6 +24,18 @@ async function proxy(request: NextRequest, path: string[]): Promise<Response> {
   });
 
   const body = await upstream.text();
+
+  // --- TEMPORARY TEST SIMULATION (1-TIME TIMEOUT) ---
+  // Backend database SUDAH menyimpan data, tapi BFF pura-pura kirim 504 Timeout ke browser
+  // if (path.join('/').includes('checkout') && request.method === 'POST' && (globalThis as Record<string, unknown>).__SIMULATE_TIMEOUT !== false) {
+  //   (globalThis as Record<string, unknown>).__SIMULATE_TIMEOUT = false;
+  //   return NextResponse.json(
+  //     { message: 'Simulasi Koneksi Terputus / Gateway Timeout (504)' },
+  //     { status: 504 },
+  //   );
+  // }
+  // --------------------------------------------------
+
   const response = new NextResponse(body, {
     status: upstream.status,
     headers: { 'content-type': upstream.headers.get('content-type') ?? 'application/json' },

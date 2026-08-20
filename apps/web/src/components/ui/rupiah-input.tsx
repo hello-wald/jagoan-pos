@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, type ChangeEvent } from 'react';
-import { formatRupiahDisplay, parseRupiahInput } from '@/lib/format/currency';
+import { MAX_PRICE, formatRupiahDisplay, parseRupiahInput } from '@/lib/format/currency';
 import { Input } from './input';
 
 type Props = {
@@ -35,7 +35,7 @@ export function RupiahInput({ id, value, onChange, ...aria }: Props) {
   }, [value]);
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
-    const parsed = parseRupiahInput(event.target.value);
+    const parsed = parseRupiahInput(event.target.value, MAX_PRICE);
     setText(display(parsed));
     onChange(parsed);
   }

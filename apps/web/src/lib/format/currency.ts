@@ -1,4 +1,4 @@
-const MAX_PRICE = 2_147_483_647; // mirrors priceSchema in contracts
+export const MAX_PRICE = 2_147_483_647; // mirrors priceSchema in contracts
 
 const idr = new Intl.NumberFormat('id-ID', {
   style: 'currency',
@@ -17,9 +17,9 @@ export function formatRupiahDisplay(value: number): string {
   return grouped.format(value);
 }
 
-export function parseRupiahInput(raw: string): number | null {
+export function parseRupiahInput(raw: string, max = Number.MAX_SAFE_INTEGER): number | null {
   const digits = raw.replace(/\D/g, '');
   if (digits.length === 0) return null;
   const value = Number(digits);
-  return Number.isSafeInteger(value) && value <= MAX_PRICE ? value : null;
+  return Number.isSafeInteger(value) && value <= max ? value : null;
 }
