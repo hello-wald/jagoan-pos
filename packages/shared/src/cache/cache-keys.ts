@@ -12,4 +12,5 @@ export const cacheKeys = {
   productListVersion: () => `${PREFIX}:products:list-version`,
   productList: (version: string, queryHash: string) =>
     `${PREFIX}:products:list:${version}:${queryHash}`,
+  categoryList: (scope: string) => `${PREFIX}:products:categories:${scope}`,
 } as const;

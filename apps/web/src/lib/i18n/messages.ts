@@ -18,6 +18,8 @@ const MESSAGES: Record<AppErrorCode, string> = {
   [AppErrorCode.PRODUCT_IMAGE_NOT_READY]: 'Gambar belum selesai diunggah.',
   [AppErrorCode.STORAGE_ERROR]: 'Terjadi kesalahan penyimpanan. Coba lagi.',
   [AppErrorCode.SKU_ALREADY_EXISTS]: 'SKU ini sudah dipakai produk lain.',
+  [AppErrorCode.CATEGORY_NOT_FOUND]: 'Kategori tidak ditemukan.',
+  [AppErrorCode.CATEGORY_NAME_ALREADY_EXISTS]: 'Nama kategori ini sudah dipakai.',
   [AppErrorCode.PERMANENT_DELETE_FORBIDDEN]:
     'Produk tidak bisa dihapus permanen. Nonaktifkan produk ini sebagai gantinya.',
   [AppErrorCode.INSUFFICIENT_STOCK]: 'Stok tidak mencukupi.',
@@ -47,4 +49,5 @@ export function messageFor(code: AppErrorCode): string {
 export const FIELD_ERROR_CODES: Partial<Record<AppErrorCode, string>> = {
   [AppErrorCode.EMAIL_ALREADY_EXISTS]: 'email',
   [AppErrorCode.SKU_ALREADY_EXISTS]: 'sku',
+  [AppErrorCode.CATEGORY_NAME_ALREADY_EXISTS]: 'name',
 };

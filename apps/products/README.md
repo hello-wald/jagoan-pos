@@ -40,6 +40,33 @@ Every endpoint requires a `GLOBAL_ADMIN` bearer token.
 | `POST` | `/api/admin/products/:productId/images/upload-url` | Create a short-lived direct-upload URL |
 | `POST` | `/api/admin/products/:productId/images/:imageId/complete` | Verify and publish an uploaded image |
 | `DELETE` | `/api/admin/products/:productId/images/:imageId` | Delete a product image |
+| `POST` | `/api/admin/categories` | Create a category |
+| `GET` | `/api/admin/categories` | List categories with product counts |
+| `GET` | `/api/admin/categories/:categoryId` | Get category detail |
+| `PATCH` | `/api/admin/categories/:categoryId` | Rename a category |
+| `PATCH` | `/api/admin/categories/:categoryId/status` | Activate or deactivate a category |
+
+`GET /api/admin/products` accepts `query`, `page`, `pageSize`, `activeOnly`, and
+`categoryId`. Passing `categoryId=none` returns only the products that have no
+category, which a plain absent `categoryId` cannot express.
+
+## Categories
+
+Categories are a table, not a free-text field: `products.category_id` is a
+restricted foreign key into `categories`. Names are unique, case-insensitively,
+in both the application and PostgreSQL.
+
+There is no delete endpoint. A category in use is referenced by products that
+must keep resolving, so retiring one is a deactivation — it stops being offered
+when categorizing a product, while products already filed under it are
+untouched. The `20260820000000_add_product_categories` migration creates the
+table, promotes every distinct legacy `products.category` string into a row
+(collapsing casing variants), repoints the products at it, and drops the old
+column.
+
+A rename changes a name embedded in cached product payloads, so category writes
+invalidate the cached product detail entries of that category and bump the
+product-list cache version.
 
 ## Product images
 

@@ -10,6 +10,7 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
 import { HealthController } from './routes/health/health.controller';
 import { AuthModule } from './routes/auth/auth.module';
 import { StaffModule } from './routes/staff/staff.module';
+import { CategoriesModule } from './routes/categories/categories.module';
 import { ProductsModule } from './routes/products/products.module';
 import { ReportsModule } from './routes/reports/reports.module';
 import { TransactionsModule } from './routes/transactions/transactions.module';
@@ -31,6 +32,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AuthModule,
     StaffModule,
     ProductsModule,
+    CategoriesModule,
     ReportsModule,
     TransactionsModule,
     InventoryModule,

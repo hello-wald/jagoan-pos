@@ -3,6 +3,8 @@ export type ProductListParams = {
   page: number;
   pageSize: number;
   activeOnly?: boolean;
+  /** A category id, or UNCATEGORIZED for products filed under no category. */
+  categoryId?: string;
 };
 
 export const productKeys = {
@@ -18,6 +20,7 @@ export function buildListQuery(params: ProductListParams): string {
   search.set('page', String(params.page));
   search.set('pageSize', String(params.pageSize));
   if (params.activeOnly !== undefined) search.set('activeOnly', String(params.activeOnly));
+  if (params.categoryId) search.set('categoryId', params.categoryId);
   return `?${search.toString()}`;
 }
 

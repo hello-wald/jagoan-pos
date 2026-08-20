@@ -1,4 +1,12 @@
 import type {
+  Category,
+  CategoryListQuery,
+  CategoryWithUsage,
+  CreateCategoryInput,
+  SetCategoryActiveInput,
+  UpdateCategoryInput,
+} from "./category.schema";
+import type {
   CreateProductInput,
   CreateProductImageUploadInput,
   PaginatedProducts,
@@ -32,6 +40,16 @@ export interface ProductsContract {
   "products.deleteImage": {
     request: { productId: string; imageId: string };
     response: void;
+  };
+  // Categories live in the products service: it owns the table the products
+  // reference, so a separate transport would only add a network hop.
+  "categories.create": { request: CreateCategoryInput; response: Category };
+  "categories.list": { request: CategoryListQuery; response: CategoryWithUsage[] };
+  "categories.getById": { request: { id: string }; response: Category };
+  "categories.update": { request: { id: string; dto: UpdateCategoryInput }; response: Category };
+  "categories.setActive": {
+    request: { id: string; dto: SetCategoryActiveInput };
+    response: Category;
   };
 }
 

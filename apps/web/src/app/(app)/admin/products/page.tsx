@@ -16,7 +16,7 @@ const NEW_PRODUCT_ROUTE = '/admin/products/new' as Route;
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ query?: string; page?: string; status?: string }>;
+  searchParams: Promise<{ query?: string; page?: string; status?: string; category?: string }>;
 }) {
   const sp = await searchParams;
   const params: ProductListParams = {
@@ -24,6 +24,7 @@ export default async function ProductsPage({
     page: Number(sp.page ?? 1),
     pageSize: 20,
     activeOnly: sp.status === 'active' ? true : sp.status === 'inactive' ? false : undefined,
+    categoryId: sp.category,
   };
 
   // Prefetch on the server so the first paint carries the table, not a skeleton.

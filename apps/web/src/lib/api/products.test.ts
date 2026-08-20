@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { UNCATEGORIZED } from '@jagoan-pos/contracts';
 import { buildListQuery, productKeys, totalPages } from './products';
 
 describe('buildListQuery', () => {
@@ -10,6 +11,19 @@ describe('buildListQuery', () => {
     const qs = buildListQuery({ page: 1, pageSize: 20, query: 'mie ayam', activeOnly: true });
     expect(qs).toContain('query=mie+ayam');
     expect(qs).toContain('activeOnly=true');
+  });
+
+  it('passes the category filter through, including the uncategorized sentinel', () => {
+    expect(buildListQuery({ page: 1, pageSize: 20, categoryId: 'cat-1' })).toContain(
+      'categoryId=cat-1',
+    );
+    expect(buildListQuery({ page: 1, pageSize: 20, categoryId: UNCATEGORIZED })).toContain(
+      `categoryId=${UNCATEGORIZED}`,
+    );
+  });
+
+  it('omits the category filter when none is selected', () => {
+    expect(buildListQuery({ page: 1, pageSize: 20 })).not.toContain('categoryId');
   });
 
   it('omits an empty search rather than sending a blank string', () => {

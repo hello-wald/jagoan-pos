@@ -30,7 +30,10 @@ export function ProductTable({ params }: { params: ProductListParams }) {
   const { data, isPending, isError, refetch } = useProductList(params);
   const setActive = useSetProductActive(params);
 
-  const filtered = Boolean(params.query?.trim()) || params.activeOnly !== undefined;
+  const filtered =
+    Boolean(params.query?.trim()) ||
+    params.activeOnly !== undefined ||
+    params.categoryId !== undefined;
 
   if (isPending) {
     return (
@@ -123,7 +126,7 @@ export function ProductTable({ params }: { params: ProductListParams }) {
                   </Link>
                 </td>
                 <td className="px-4 font-mono text-[13px] text-ink-2">{product.sku}</td>
-                <td className="px-4 text-ink-2">{product.category ?? '—'}</td>
+                <td className="px-4 text-ink-2">{product.category?.name ?? '—'}</td>
                 <td className="tabular px-4 text-right">{formatIdr(product.price)}</td>
                 <td className="px-4">
                   <Badge tone={product.isActive ? 'success' : 'neutral'}>

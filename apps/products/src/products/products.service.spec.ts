@@ -1,15 +1,18 @@
-import { AppErrorCode, createProductSchema } from "@jagoan-pos/contracts";
+import { AppErrorCode, UNCATEGORIZED, createProductSchema } from "@jagoan-pos/contracts";
 import { RpcException } from "@nestjs/microservices";
 import { Prisma } from "../generated/prisma/client";
 import type { ProductsPrismaService } from "../prisma/prisma.service";
 import { ProductsService } from "./products.service";
 
 describe("ProductsService", () => {
+  const CATEGORY_ID = "2f9d1c6e-6b8a-4f5d-9a3e-1c0b7e4d2a11";
+  const category = { id: CATEGORY_ID, name: "Beverages", isActive: true };
   const product = {
     id: "d08a0a1f-833d-4a63-a9de-f40c28000f31",
     name: "Mineral Water",
     sku: "WATER-600ML",
-    category: "Beverages",
+    categoryId: CATEGORY_ID,
+    category,
     price: 5000,
     isActive: true,
     createdAt: new Date(),
@@ -57,6 +60,14 @@ describe("ProductsService", () => {
     },
   };
 
+  const expectedInclude = {
+    category: { select: { id: true, name: true, isActive: true } },
+    images: {
+      where: { status: "READY" },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    },
+  };
+
   let service: ProductsService;
 
   beforeEach(() => {
@@ -79,7 +90,7 @@ describe("ProductsService", () => {
     await service.create({
       name: "Mineral Water",
       sku: " water-600ml ",
-      category: "Beverages",
+      categoryId: CATEGORY_ID,
       price: 5000,
     });
 
@@ -87,16 +98,69 @@ describe("ProductsService", () => {
       data: {
         name: "Mineral Water",
         sku: "WATER-600ML",
-        category: "Beverages",
+        categoryId: CATEGORY_ID,
         price: 5000,
       },
-      include: {
-        images: {
-          where: { status: "READY" },
-          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-        },
-      },
+      include: expectedInclude,
     });
+  });
+
+  it("reports an unknown category as a domain error rather than a foreign key failure", async () => {
+    prisma.product.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("FK violation", {
+        code: "P2003",
+        clientVersion: "7.9.1",
+      }),
+    );
+
+    await expectProductError(
+      service.create({
+        name: "Water",
+        sku: "WATER-600ML",
+        categoryId: "0e1d2c3b-4a59-4687-8b9c-0d1e2f3a4b5c",
+        price: 5000,
+      }),
+      AppErrorCode.CATEGORY_NOT_FOUND,
+      "Category not found",
+    );
+  });
+
+  it("clears the category when the update sends an explicit null", async () => {
+    prisma.product.update.mockResolvedValue({ ...product, categoryId: null, category: null });
+
+    await service.update(product.id, { categoryId: null });
+
+    expect(prisma.product.update).toHaveBeenCalledWith({
+      where: { id: product.id },
+      data: { categoryId: null },
+      include: expectedInclude,
+    });
+  });
+
+  it("filters by category, and by its absence when given the uncategorized sentinel", async () => {
+    redis.get.mockResolvedValue(null);
+    redis.getRaw.mockResolvedValue("0");
+    prisma.$transaction.mockResolvedValue([[], 0]);
+
+    await service.list({ page: 1, pageSize: 20, categoryId: CATEGORY_ID });
+    expect(prisma.product.count).toHaveBeenCalledWith({ where: { categoryId: CATEGORY_ID } });
+
+    await service.list({ page: 1, pageSize: 20, categoryId: UNCATEGORIZED });
+    expect(prisma.product.count).toHaveBeenCalledWith({ where: { categoryId: null } });
+  });
+
+  it("caches category-filtered lists separately from unfiltered ones", async () => {
+    redis.get.mockResolvedValue(null);
+    redis.getRaw.mockResolvedValue("0");
+    prisma.$transaction.mockResolvedValue([[], 0]);
+
+    await service.list({ page: 1, pageSize: 20 });
+    const unfilteredKey = redis.set.mock.calls.at(-1)?.[0];
+
+    await service.list({ page: 1, pageSize: 20, categoryId: CATEGORY_ID });
+    const filteredKey = redis.set.mock.calls.at(-1)?.[0];
+
+    expect(filteredKey).not.toEqual(unfilteredKey);
   });
 
   it("returns a domain error when a SKU conflicts", async () => {
@@ -122,12 +186,7 @@ describe("ProductsService", () => {
     expect(prisma.product.update).toHaveBeenCalledWith({
       where: { id: product.id },
       data: { isActive: false },
-      include: {
-        images: {
-          where: { status: "READY" },
-          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-        },
-      },
+      include: expectedInclude,
     });
   });
 
@@ -149,7 +208,10 @@ describe("ProductsService", () => {
       },
     ]);
 
-    expect(prisma.product.findMany).toHaveBeenCalledWith({ where: { id: { in: [product.id] } } });
+    expect(prisma.product.findMany).toHaveBeenCalledWith({
+      where: { id: { in: [product.id] } },
+      include: { category: { select: { id: true, name: true, isActive: true } } },
+    });
     expect(storage.createSignedReadUrl).not.toHaveBeenCalled();
   });
 

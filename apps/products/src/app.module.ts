@@ -5,6 +5,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { buildLoggerOptions, validateEnv } from '@jagoan-pos/shared';
 import { ENV_FILE_PATH, productsEnvSchema } from './config/env.schema';
+import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 
 @Module({
@@ -17,6 +18,7 @@ import { ProductsModule } from './products/products.module';
     }),
     LoggerModule.forRoot(buildLoggerOptions('products')),
     ProductsModule,
+    CategoriesModule,
   ],
   providers: [{ provide: APP_PIPE, useClass: ZodValidationPipe }],
 })

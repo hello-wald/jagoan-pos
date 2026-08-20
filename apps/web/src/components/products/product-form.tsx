@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Route } from 'next';
 import { Controller, useForm, type Resolver } from 'react-hook-form';
@@ -15,6 +16,7 @@ import {
   type UpdateProductInput,
 } from '@jagoan-pos/contracts';
 import { useCreateProduct, useUpdateProduct } from '@/lib/api/products';
+import { useCategoryList } from '@/lib/api/categories';
 import { useUploadProductImages } from '@/lib/api/product-images';
 import { messageFor } from '@/lib/i18n/messages';
 import { Banner } from '@/components/ui/banner';
@@ -25,11 +27,12 @@ import { RupiahInput } from '@/components/ui/rupiah-input';
 import { ProductImageUploader } from './product-image-uploader';
 
 const PRODUCTS_ROUTE = '/admin/products' as Route;
+const CATEGORIES_ROUTE = '/admin/categories' as Route;
 
 type FormValues = {
   name: string;
   sku: string;
-  category?: string;
+  categoryId?: string | null;
   price: number | null;
 };
 
@@ -44,6 +47,13 @@ export function ProductForm({ mode, product }: Props) {
   // the picked files wait here and go up immediately afterwards.
   const [stagedImages, setStagedImages] = useState<File[]>([]);
   const uploadImages = useUploadProductImages();
+
+  const { data: categories, isPending: categoriesPending } = useCategoryList();
+  // Retired categories are not offered, but the one already on this product
+  // stays listed so that editing another field cannot silently drop it.
+  const categoryOptions = (categories ?? []).filter(
+    (category) => category.isActive || category.id === product?.categoryId,
+  );
 
   const {
     register,
@@ -61,7 +71,9 @@ export function ProductForm({ mode, product }: Props) {
     defaultValues: {
       name: product?.name ?? '',
       sku: product?.sku ?? '',
-      category: product?.category ?? undefined,
+      // null, never '': the schema validates a uuid or null, and an empty
+      // string would fail the resolver before the form could ever submit.
+      categoryId: product?.categoryId ?? null,
       price: product?.price ?? null,
     },
   });
@@ -80,9 +92,9 @@ export function ProductForm({ mode, product }: Props) {
     const full: CreateProductInput = {
       name: values.name,
       sku: values.sku,
-      // setValueAs on the category field already normalizes '' -> undefined
-      // before the resolver runs, so values.category is already clean here.
-      category: values.category,
+      // The empty option means "no category"; null clears it server-side,
+      // where undefined would instead leave the existing value untouched.
+      categoryId: values.categoryId ?? null,
       price: values.price as number,
     };
 
@@ -91,7 +103,7 @@ export function ProductForm({ mode, product }: Props) {
     const partial: Partial<CreateProductInput> = {};
     if (dirtyFields.name) partial.name = full.name;
     if (dirtyFields.sku) partial.sku = full.sku;
-    if (dirtyFields.category) partial.category = full.category;
+    if (dirtyFields.categoryId) partial.categoryId = full.categoryId;
     if (dirtyFields.price) partial.price = full.price;
 
     try {
@@ -146,15 +158,49 @@ export function ProductForm({ mode, product }: Props) {
         <Input id="sku" className="font-mono" {...register('sku')} />
       </Field>
 
-      <Field id="category" label="Kategori (opsional)" error={errors.category?.message}>
-        <Input
-          id="category"
-          {...register('category', {
-            setValueAs: (value: unknown) =>
-              typeof value === 'string' && value.trim() ? value.trim() : undefined,
-          })}
-        />
-      </Field>
+      {/* Controlled, like price: the empty option has to map to null on the
+          way out and back to '' on the way in, which register cannot express. */}
+      <Controller
+        control={control}
+        name="categoryId"
+        render={({ field }) => (
+          <Field
+            id="categoryId"
+            label="Kategori (opsional)"
+            error={errors.categoryId?.message}
+            hint={
+              categoriesPending || categoryOptions.length > 0
+                ? undefined
+                : 'Belum ada kategori. Buat kategori terlebih dahulu untuk mengelompokkan produk.'
+            }
+          >
+            <select
+              id="categoryId"
+              disabled={categoriesPending}
+              className="h-11 w-full rounded-control border border-line bg-surface px-3 text-ink outline-none transition-colors duration-150 focus:border-accent-deep focus:ring-2 focus:ring-accent-deep/20 disabled:opacity-50 aria-[invalid=true]:border-danger"
+              name={field.name}
+              ref={field.ref}
+              onBlur={field.onBlur}
+              value={field.value ?? ''}
+              onChange={(event) => field.onChange(event.target.value || null)}
+            >
+              <option value="">Tanpa kategori</option>
+              {categoryOptions.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.isActive ? category.name : `${category.name} (nonaktif)`}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
+      />
+
+      <p className="-mt-3 text-[13px] text-ink-3">
+        <Link href={CATEGORIES_ROUTE} className="underline underline-offset-4 hover:text-ink-2">
+          Kelola kategori
+        </Link>{' '}
+        untuk menambah atau mengubah pilihan di atas.
+      </p>
 
       <Controller
         control={control}

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MagnifyingGlass } from '@phosphor-icons/react';
+import { UNCATEGORIZED } from '@jagoan-pos/contracts';
+import { useCategoryList } from '@/lib/api/categories';
 import { Input } from '@/components/ui/input';
 
 export function ProductFilters() {
@@ -11,6 +13,11 @@ export function ProductFilters() {
   const [query, setQuery] = useState(searchParams.get('query') ?? '');
 
   const status = searchParams.get('status') ?? 'all';
+  const category = searchParams.get('category') ?? 'all';
+
+  // Every category, not just the active ones: a product filed under a retired
+  // category still needs to be reachable by filtering for it.
+  const { data: categories } = useCategoryList();
 
   // Debounced so the catalog is not queried on every keystroke.
   useEffect(() => {
@@ -28,11 +35,12 @@ export function ProductFilters() {
     return () => clearTimeout(timer);
   }, [query, router, searchParams]);
 
-  function onStatusChange(value: string) {
+  // 'all' omits the param entirely rather than sending a filter that matches
+  // everything, which keeps the URL and the cache key clean.
+  function setParam(key: string, value: string) {
     const next = new URLSearchParams(searchParams.toString());
-    // 'all' omits activeOnly entirely rather than sending false.
-    if (value === 'all') next.delete('status');
-    else next.set('status', value);
+    if (value === 'all') next.delete(key);
+    else next.set(key, value);
     next.delete('page');
     router.replace(`?${next.toString()}`, { scroll: false });
   }
@@ -59,13 +67,31 @@ export function ProductFilters() {
         />
       </div>
 
+      <label htmlFor="product-category" className="sr-only">
+        Kategori produk
+      </label>
+      <select
+        id="product-category"
+        value={category}
+        onChange={(event) => setParam('category', event.target.value)}
+        className="h-11 rounded-control border border-line bg-surface px-3 text-sm text-ink"
+      >
+        <option value="all">Semua kategori</option>
+        <option value={UNCATEGORIZED}>Tanpa kategori</option>
+        {categories?.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.isActive ? option.name : `${option.name} (nonaktif)`}
+          </option>
+        ))}
+      </select>
+
       <label htmlFor="product-status" className="sr-only">
         Status produk
       </label>
       <select
         id="product-status"
         value={status}
-        onChange={(event) => onStatusChange(event.target.value)}
+        onChange={(event) => setParam('status', event.target.value)}
         className="h-11 rounded-control border border-line bg-surface px-3 text-sm text-ink"
       >
         <option value="all">Semua status</option>

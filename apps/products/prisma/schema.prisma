@@ -8,18 +8,34 @@ datasource db {
   provider = "postgresql"
 }
 
-model Product {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String   @db.VarChar(150)
-  sku       String   @unique @db.VarChar(64)
-  category  String?  @db.VarChar(80)
-  price     Int
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  images    ProductImage[]
+/// Administrator-managed catalog taxonomy. Categories are never hard-deleted:
+/// products keep pointing at them, so deactivation is the only way to retire one.
+model Category {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @unique @db.VarChar(80)
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  products  Product[]
 
   @@index([isActive, name])
+  @@map("categories")
+}
+
+model Product {
+  id         String    @id @default(uuid()) @db.Uuid
+  name       String    @db.VarChar(150)
+  sku        String    @unique @db.VarChar(64)
+  categoryId String?   @map("category_id") @db.Uuid
+  price      Int
+  isActive   Boolean   @default(true) @map("is_active")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  images     ProductImage[]
+
+  @@index([isActive, name])
+  @@index([categoryId, name])
   @@map("products")
 }
 

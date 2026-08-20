@@ -13,6 +13,7 @@ import {
   Receipt,
   Sparkle,
   Storefront,
+  Tag,
   Users,
   X,
   type Icon,
@@ -25,7 +26,10 @@ type NavItem = { href: Route; label: string; icon: Icon };
 // typedRoutes can't see /admin/products as a literal until Task 11 builds
 // the page, so these are asserted once here instead of at each Link.
 const NAV: Record<UserRole, ReadonlyArray<NavItem>> = {
-  GLOBAL_ADMIN: [{ href: '/admin/products' as Route, label: 'Katalog Produk', icon: Package }],
+  GLOBAL_ADMIN: [
+    { href: '/admin/products' as Route, label: 'Katalog Produk', icon: Package },
+    { href: '/admin/categories' as Route, label: 'Kategori Produk', icon: Tag },
+  ],
   OWNER: [
     { href: '/dashboard' as Route, label: 'Dashboard & Laporan', icon: ChartBar },
     { href: '/transactions' as Route, label: 'Riwayat Transaksi', icon: Receipt },

@@ -2,6 +2,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { Injectable } from "@nestjs/common";
 import {
   AppErrorCode,
+  UNCATEGORIZED,
+  type CategorySummary,
   type CreateProductImageUploadInput,
   type CreateProductInput,
   type PaginatedProducts,
@@ -19,11 +21,14 @@ import { Prisma, ProductImageStatus } from "../generated/prisma/client";
 import type { ProductsEnv } from "../config/env.schema";
 import { ProductsPrismaService } from "../prisma/prisma.service";
 import { ProductStorageService } from "../storage/product-storage.service";
+import {
+  PRODUCT_CACHE_TTL_SECONDS,
+  PRODUCT_LIST_CACHE_TTL_SECONDS,
+  PRODUCT_LIST_VERSION_TTL_SECONDS,
+} from "./catalog-cache";
 
-const PRODUCT_CACHE_TTL_SECONDS = 600;
-const PRODUCT_LIST_CACHE_TTL_SECONDS = 60;
-const PRODUCT_LIST_VERSION_TTL_SECONDS = 3600;
 const productWithReadyImages: Prisma.ProductInclude = {
+  category: { select: { id: true, name: true, isActive: true } },
   images: {
     where: { status: ProductImageStatus.READY },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -34,7 +39,8 @@ type ProductWithReadyImages = {
   id: string;
   name: string;
   sku: string;
-  category: string | null;
+  categoryId: string | null;
+  category: CategorySummary | null;
   price: number;
   isActive: boolean;
   createdAt: Date;
@@ -86,6 +92,10 @@ export class ProductsService {
 
     const where: Prisma.ProductWhereInput = {
       ...(query.activeOnly === undefined ? {} : { isActive: query.activeOnly }),
+      // The sentinel matches products with no category; a uuid matches one category.
+      ...(query.categoryId === undefined
+        ? {}
+        : { categoryId: query.categoryId === UNCATEGORIZED ? null : query.categoryId }),
       ...(query.query
         ? {
             OR: [
@@ -132,7 +142,10 @@ export class ProductsService {
 
   async getManyByIds(ids: string[]): Promise<Product[]> {
     if (ids.length === 0) return Promise.resolve([]);
-    const products = await this.prisma.product.findMany({ where: { id: { in: ids } } });
+    const products = await this.prisma.product.findMany({
+      where: { id: { in: ids } },
+      include: { category: { select: { id: true, name: true, isActive: true } } },
+    });
     // This RPC is used by checkout for catalog validation. It must not depend on
     // storage availability or generate signed URLs that the caller does not use.
     return products.map((product) => ({
@@ -284,6 +297,7 @@ export class ProductsService {
       id: product.id,
       name: product.name,
       sku: product.sku,
+      categoryId: product.categoryId,
       category: product.category,
       price: product.price,
       isActive: product.isActive,
@@ -322,6 +336,7 @@ export class ProductsService {
       page: query.page,
       pageSize: query.pageSize,
       activeOnly: query.activeOnly ?? null,
+      categoryId: query.categoryId ?? null,
     };
     const hash = createHash("sha256").update(JSON.stringify(normalizedQuery)).digest("hex");
     return cacheKeys.productList(version, hash);
@@ -338,7 +353,7 @@ export class ProductsService {
     return {
       ...(dto.name === undefined ? {} : { name: dto.name.trim() }),
       ...(dto.sku === undefined ? {} : { sku: this.normalizeSku(dto.sku) }),
-      ...(dto.category === undefined ? {} : { category: dto.category?.trim() ?? null }),
+      ...(dto.categoryId === undefined ? {} : { categoryId: dto.categoryId }),
       ...(dto.price === undefined ? {} : { price: dto.price }),
     } as Prisma.ProductUncheckedCreateInput;
   }
@@ -358,6 +373,10 @@ export class ProductsService {
       }
       if (error.code === "P2025") {
         throw this.rpcError(AppErrorCode.PRODUCT_NOT_FOUND, "Product not found");
+      }
+      // The categories FK is the only one a caller-supplied id can violate.
+      if (error.code === "P2003") {
+        throw this.rpcError(AppErrorCode.CATEGORY_NOT_FOUND, "Category not found");
       }
     }
     throw error;

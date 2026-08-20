@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+import type { CategorySummary } from "./category.schema";
+
+/**
+ * Sentinel for the category filter, matching products that have no category at
+ * all. A plain absent `categoryId` means "any category", so the two cases need
+ * to be distinguishable on the wire.
+ */
+export const UNCATEGORIZED = "none";
+
 const skuSchema = z
   .string()
   .trim()
@@ -15,7 +24,8 @@ const priceSchema = z.coerce.number().int().positive().max(2_147_483_647);
 export const createProductSchema = z.object({
   name: z.string().trim().min(1).max(150),
   sku: skuSchema,
-  category: z.string().trim().min(1).max(80).optional(),
+  // Null clears the category on update; absent leaves it untouched.
+  categoryId: z.uuid().nullable().optional(),
   price: priceSchema,
 });
 
@@ -42,6 +52,7 @@ export const productListQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(100).default(20),
   activeOnly: z.union([z.boolean(), z.stringbool()]).optional(),
+  categoryId: z.union([z.uuid(), z.literal(UNCATEGORIZED)]).optional(),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
@@ -54,7 +65,8 @@ export type Product = {
   id: string;
   name: string;
   sku: string;
-  category: string | null;
+  categoryId: string | null;
+  category: CategorySummary | null;
   price: number;
   isActive: boolean;
   createdAt: string;
