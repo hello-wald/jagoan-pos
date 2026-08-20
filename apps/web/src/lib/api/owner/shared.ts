@@ -1,7 +1,4 @@
-import type {
-  GetMerchantStockQueryInput,
-  ListSalesQueryInput,
-} from '@jagoan-pos/contracts';
+import type { GetMerchantStockQueryInput, ListSalesQueryInput } from '@jagoan-pos/contracts';
 
 export type OwnerDatePreset = 'TODAY' | '7D' | '30D' | 'MONTH_COMPARISON';
 
@@ -79,36 +76,21 @@ export function getMonthComparisonRanges(now = new Date()): {
   };
 }
 
-export function buildInventoryQuery(params: Partial<GetMerchantStockQueryInput>): string {
-  const searchParams = new URLSearchParams();
-  if (params.page !== undefined) searchParams.set('page', String(params.page));
-  if (params.limit !== undefined) searchParams.set('limit', String(params.limit));
-  const trimmed = params.search?.trim();
-  if (trimmed) searchParams.set('search', trimmed);
-  if (params.activeOnly !== undefined) searchParams.set('activeOnly', String(params.activeOnly));
-  const queryString = searchParams.toString();
-  return queryString ? `?${queryString}` : '';
-}
-
-export function buildTransactionsQuery(params: Partial<ListSalesQueryInput>): string {
-  const searchParams = new URLSearchParams();
-  if (params.page !== undefined) searchParams.set('page', String(params.page));
-  if (params.limit !== undefined) searchParams.set('limit', String(params.limit));
-  const trimmed = params.search?.trim();
-  if (trimmed) searchParams.set('search', trimmed);
-  if (params.startDate) searchParams.set('startDate', params.startDate);
-  if (params.endDate) searchParams.set('endDate', params.endDate);
-  const queryString = searchParams.toString();
-  return queryString ? `?${queryString}` : '';
-}
+export { buildInventoryQuery, buildTransactionsQuery } from '../query-builders';
 
 export const ownerReportKeys = {
   all: ['owner', 'reports'] as const,
   dashboard: (date?: string) =>
-    date ? (['owner', 'reports', 'dashboard', date] as const) : (['owner', 'reports', 'dashboard'] as const),
+    date
+      ? (['owner', 'reports', 'dashboard', date] as const)
+      : (['owner', 'reports', 'dashboard'] as const),
   revenue: (from: string, to: string) => ['owner', 'reports', 'revenue', { from, to }] as const,
-  topProducts: (params: { from: string; to: string; limit?: number; direction?: 'best' | 'worst' }) =>
-    ['owner', 'reports', 'top-products', params] as const,
+  topProducts: (params: {
+    from: string;
+    to: string;
+    limit?: number;
+    direction?: 'best' | 'worst';
+  }) => ['owner', 'reports', 'top-products', params] as const,
   hourly: (from: string, to: string) => ['owner', 'reports', 'hourly', { from, to }] as const,
 };
 
@@ -126,7 +108,8 @@ export const ownerStaffKeys = {
 
 export const ownerTransactionKeys = {
   all: ['owner', 'transactions'] as const,
-  list: (params: Partial<ListSalesQueryInput>) => ['owner', 'transactions', 'list', params] as const,
+  list: (params: Partial<ListSalesQueryInput>) =>
+    ['owner', 'transactions', 'list', params] as const,
   detail: (id: string) => ['owner', 'transactions', 'detail', id] as const,
 };
 
