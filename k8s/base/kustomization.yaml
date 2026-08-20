@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - api-gateway.yaml
+  - core.yaml
+  - products.yaml
+  - transactions.yaml
+  - outbox-relay.yaml
+  - reports.yaml
+  - analytics.yaml
+  - hpa.yaml
+  - ingress.yaml

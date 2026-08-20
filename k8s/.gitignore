@@ -1,0 +1,3 @@
+# Runtime secret source files must stay on the VM, never in Git.
+secrets/
+*.env

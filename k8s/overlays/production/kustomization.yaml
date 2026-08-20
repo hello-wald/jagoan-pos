@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: jagoan-pos
+resources:
+  - ../../base
+
+# Replace PROJECT_ID and COMMIT_SHA before the first deployment. CI should set
+# only newTag to github.sha, keeping every rollout immutable and reversible.
+images:
+  - name: jagoan-pos/api-gateway
+    newName: asia-southeast2-docker.pkg.dev/PROJECT_ID/jagoan-pos/api-gateway
+    newTag: COMMIT_SHA
+  - name: jagoan-pos/core
+    newName: asia-southeast2-docker.pkg.dev/PROJECT_ID/jagoan-pos/core
+    newTag: COMMIT_SHA
+  - name: jagoan-pos/products
+    newName: asia-southeast2-docker.pkg.dev/PROJECT_ID/jagoan-pos/products
+    newTag: COMMIT_SHA
+  - name: jagoan-pos/transactions
+    newName: asia-southeast2-docker.pkg.dev/PROJECT_ID/jagoan-pos/transactions
+    newTag: COMMIT_SHA
+  - name: jagoan-pos/outbox-relay
+    newName: asia-southeast2-docker.pkg.dev/PROJECT_ID/jagoan-pos/outbox-relay
+    newTag: COMMIT_SHA
+  - name: jagoan-pos/reports
+    newName: asia-southeast2-docker.pkg.dev/PROJECT_ID/jagoan-pos/reports
+    newTag: COMMIT_SHA
+  - name: jagoan-pos/analytics
+    newName: asia-southeast2-docker.pkg.dev/PROJECT_ID/jagoan-pos/analytics
+    newTag: COMMIT_SHA
