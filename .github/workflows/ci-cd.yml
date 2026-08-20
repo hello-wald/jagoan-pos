@@ -127,7 +127,7 @@ jobs:
           RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
 
   deploy:
-    name: Roll out on GCE
+    name: Roll out k3s on GCE
     if: github.event_name != 'pull_request'
     needs: [build-and-push, migrate]
     runs-on: ubuntu-latest
@@ -147,7 +147,33 @@ jobs:
 
       - uses: google-github-actions/setup-gcloud@v2
 
-      - name: Pull immutable images and restart the Compose stack
+      - name: Prepare the deployment directory on the VM
+        env:
+          GCE_INSTANCE: ${{ vars.GCE_INSTANCE }}
+          GCE_ZONE: ${{ vars.GCE_ZONE }}
+          GCE_DEPLOY_PATH: ${{ vars.GCE_DEPLOY_PATH }}
+        run: |
+          gcloud compute ssh "$GCE_INSTANCE" \
+            --zone "$GCE_ZONE" \
+            --tunnel-through-iap \
+            --command "sudo mkdir -p '$GCE_DEPLOY_PATH/deploy/gcp' && sudo chown -R \$USER:\$USER '$GCE_DEPLOY_PATH'"
+
+      - name: Send manifests and k3s rollout script to the VM
+        env:
+          GCE_INSTANCE: ${{ vars.GCE_INSTANCE }}
+          GCE_ZONE: ${{ vars.GCE_ZONE }}
+          GCE_DEPLOY_PATH: ${{ vars.GCE_DEPLOY_PATH }}
+        run: |
+          gcloud compute scp --recurse k8s \
+            "$GCE_INSTANCE:$GCE_DEPLOY_PATH/" \
+            --zone "$GCE_ZONE" \
+            --tunnel-through-iap
+          gcloud compute scp deploy/gcp/rollout-k3s.sh \
+            "$GCE_INSTANCE:$GCE_DEPLOY_PATH/deploy/gcp/rollout-k3s.sh" \
+            --zone "$GCE_ZONE" \
+            --tunnel-through-iap
+
+      - name: Import immutable images and apply the k3s overlay
         env:
           IMAGE_TAG: ${{ github.sha }}
           GCE_INSTANCE: ${{ vars.GCE_INSTANCE }}
@@ -157,4 +183,4 @@ jobs:
           gcloud compute ssh "$GCE_INSTANCE" \
             --zone "$GCE_ZONE" \
             --tunnel-through-iap \
-            --command "cd '$GCE_DEPLOY_PATH' && ./deploy/gcp/rollout.sh '$AR_HOST/$AR_REPOSITORY' '$IMAGE_TAG'"
+            --command "cd '$GCE_DEPLOY_PATH' && chmod 700 deploy/gcp/rollout-k3s.sh && ./deploy/gcp/rollout-k3s.sh '$AR_HOST/$AR_REPOSITORY' '$IMAGE_TAG'"
