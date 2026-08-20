@@ -4,8 +4,10 @@ import { TransactionsView } from './transactions-view';
 import * as ownerTransactionsApi from '@/lib/api/owner';
 import type { PaginatedSales, Sale } from '@jagoan-pos/contracts';
 
+import type * as OwnerApi from '@/lib/api/owner';
+
 vi.mock('@/lib/api/owner', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/api/owner')>();
+  const actual = await importOriginal<typeof OwnerApi>();
   return {
     ...actual,
   };
@@ -166,7 +168,9 @@ describe('TransactionsView', () => {
     fireEvent.click(receiptButtons[0]);
 
     // Modal opens
-    expect(screen.getByRole('heading', { level: 2, name: 'Detail Struk Pembayaran' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Detail Struk Pembayaran' }),
+    ).toBeInTheDocument();
 
     // Requests detail from /transactions/:id
     expect(useTransactionSpy).toHaveBeenCalledWith('sale-1');
@@ -182,7 +186,9 @@ describe('TransactionsView', () => {
     // Close modal
     fireEvent.click(screen.getByRole('button', { name: 'Tutup Struk' }));
     await waitFor(() => {
-      expect(screen.queryByRole('heading', { level: 2, name: 'Detail Struk Pembayaran' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('heading', { level: 2, name: 'Detail Struk Pembayaran' }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -201,7 +207,9 @@ describe('TransactionsView', () => {
     render(<TransactionsView />);
 
     expect(screen.getByText('Belum ada transaksi')).toBeInTheDocument();
-    expect(screen.getByText('Belum ada catatan transaksi penjualan pada periode ini.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Belum ada catatan transaksi penjualan pada periode ini.'),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Navigasi halaman' })).not.toBeInTheDocument();
   });
 

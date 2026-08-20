@@ -95,7 +95,9 @@ export function CashierShell({ children }: CashierShellProps) {
                 <User size={14} weight="bold" className="text-ink-3" aria-hidden />
                 <span>{user.fullName}</span>
               </div>
-              <div className="text-[11px] text-ink-3">{user.merchantName || 'Merchant'}</div>
+              <div className="text-[11px] text-ink-3">
+                Merchant {user.merchantName || 'Merchant'}
+              </div>
             </div>
           ) : null}
 

@@ -27,8 +27,8 @@ describe('parseRupiahInput', () => {
     expect(parseRupiahInput('abc')).toBeNull();
   });
 
-  it('rejects a value above the schema ceiling', () => {
+  it('rejects a value above the schema ceiling when max is provided', () => {
     // priceSchema caps at 2_147_483_647.
-    expect(parseRupiahInput('9999999999')).toBeNull();
+    expect(parseRupiahInput('9999999999', 2_147_483_647)).toBeNull();
   });
 });
