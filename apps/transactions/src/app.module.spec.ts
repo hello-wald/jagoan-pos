@@ -4,10 +4,15 @@ import { InventoryModule } from './inventory/inventory.module';
 import { InventoryService } from './inventory/inventory.service';
 import { SalesModule } from './sales/sales.module';
 import { SalesService } from './sales/sales.service';
-import { AppModule } from './app.module';
 
 process.env.TRANSACTIONS_DATABASE_URL = 'postgresql://user:pass@localhost:5432/db';
 process.env.TRANSACTIONS_DIRECT_URL = 'postgresql://user:pass@localhost:5432/db';
+
+// `require` is deliberately used after the assignments above. Static ES
+// imports are evaluated before this module body, which made this test
+// accidentally depend on a developer's local .env file.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { AppModule } = require('./app.module');
 
 /**
  * Every other spec constructs services directly with mocks, so nothing else
