@@ -114,5 +114,5 @@ export const ownerTransactionKeys = {
 };
 
 export const ownerProfileKeys = {
-  me: ['owner', 'profile', 'me'] as const,
+  me: ['auth', 'me'] as const,
 };
