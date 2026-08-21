@@ -155,6 +155,7 @@ export function ProductTable({ params }: { params: ProductListParams }) {
                   <StatusToggle
                     id={product.id}
                     isActive={product.isActive}
+                    name={product.name}
                     onToggle={setActive.mutateAsync}
                   />
                 </td>

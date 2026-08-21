@@ -3,6 +3,11 @@ import { SESSION_COOKIE } from '@/lib/auth/session';
 
 const METHODS_WITH_BODY = new Set(['POST', 'PATCH', 'PUT']);
 
+// Every proxied call shares this ceiling, and /ai-insight is the one that
+// needs it: it waits on a Gemini round trip with up to AI_MAX_TOOL_CALLS
+// hops behind it. Vercel's default cap is well under that.
+export const maxDuration = 60;
+
 /**
  * The single seam where credentials attach. The browser calls this
  * same-origin, the cookie rides along automatically, and the bearer token is
