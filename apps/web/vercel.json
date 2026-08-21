@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": ["sin1"],
-  "buildCommand": "npm run build:packages --prefix ../.. && next build"
+  "buildCommand": "npm run build --prefix ../.. --workspace=@jagoan-pos/contracts && next build"
 }
