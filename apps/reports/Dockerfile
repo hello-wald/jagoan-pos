@@ -27,8 +27,15 @@ COPY apps/reports ./apps/reports
 
 # No prisma:generate — reports reads ClickHouse and owns no relational schema.
 RUN npm run build:packages \
-  && npm run build --workspace=@jagoan-pos/reports \
-  && npm prune --omit=dev
+  && npm run build --workspace=@jagoan-pos/reports
+
+# The migration image deliberately retains ts-node and the source scripts. It
+# is only used by the in-cluster migration Job, never by the reports server.
+FROM builder AS migration
+CMD ["npm", "run", "clickhouse:migrate", "--workspace=@jagoan-pos/reports"]
+
+FROM builder AS production-deps
+RUN npm prune --omit=dev
 
 FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
@@ -38,10 +45,10 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/reports ./apps/reports
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/package.json ./package.json
+COPY --from=production-deps /app/node_modules ./node_modules
+COPY --from=production-deps /app/apps/reports ./apps/reports
+COPY --from=production-deps /app/packages ./packages
+COPY --from=production-deps /app/package.json ./package.json
 
 USER node
 EXPOSE 4004

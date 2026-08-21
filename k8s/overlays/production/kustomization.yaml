@@ -25,6 +25,9 @@ images:
   - name: jagoan-pos/reports
     newName: asia-southeast2-docker.pkg.dev/PROJECT_ID/jagoan-pos/reports
     newTag: COMMIT_SHA
+  - name: jagoan-pos/reports-migrate
+    newName: asia-southeast2-docker.pkg.dev/PROJECT_ID/jagoan-pos/reports-migrate
+    newTag: COMMIT_SHA
   - name: jagoan-pos/analytics
     newName: asia-southeast2-docker.pkg.dev/PROJECT_ID/jagoan-pos/analytics
     newTag: COMMIT_SHA

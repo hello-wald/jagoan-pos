@@ -22,7 +22,7 @@ test -f k8s/overlays/production/kustomization.yaml
 # k3s uses containerd, not Docker's image store. The VM service account is
 # authorized to pull from Artifact Registry; importing keeps registry
 # credentials out of Kubernetes Secrets for this single-node deployment.
-for service in api-gateway core products transactions outbox-relay reports analytics; do
+for service in api-gateway core products transactions outbox-relay reports reports-migrate analytics; do
   image="${registry}/${service}:${tag}"
   sudo -n docker pull "$image"
   sudo -n docker image save "$image" | sudo -n k3s ctr -n k8s.io images import -
@@ -41,7 +41,13 @@ sed \
   k8s/overlays/production/kustomization.yaml \
   > "$render_root/overlays/production/kustomization.yaml"
 
+# A completed Job with the same name would not execute again. Remove the old
+# run, then wait for the new immutable-image migration before rollout succeeds.
+sudo -n k3s kubectl -n jagoan-pos delete job clickhouse-migrate --ignore-not-found
 sudo -n k3s kubectl apply -k "$render_root/overlays/production"
+sudo -n k3s kubectl -n jagoan-pos wait \
+  --for=condition=complete job/clickhouse-migrate \
+  --timeout=180s
 
 for deployment in api-gateway core products transactions outbox-relay reports analytics; do
   sudo -n k3s kubectl -n jagoan-pos rollout status "deployment/${deployment}" --timeout=180s
