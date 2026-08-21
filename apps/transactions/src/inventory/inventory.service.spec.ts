@@ -1,5 +1,6 @@
 import {
   AppErrorCode,
+  UNCATEGORIZED,
   adjustStockSchema,
   getMerchantStockQuerySchema,
 } from '@jagoan-pos/contracts';
@@ -191,6 +192,42 @@ describe('InventoryService', () => {
         pageSize: 10,
         query: 'Kopi',
         activeOnly: true,
+      });
+    });
+
+    it('should forward categoryId and UNCATEGORIZED sentinel to products service', async () => {
+      products.send.mockResolvedValue({
+        data: [],
+        meta: { total: 0, page: 1, pageSize: 10, totalPages: 0 },
+      });
+      prisma.inventory.findMany.mockResolvedValue([]);
+
+      await service.getMerchantStock(MERCHANT_ID, {
+        page: 1,
+        limit: 10,
+        categoryId: '2f9d1c6e-6b8a-4f5d-9a3e-1c0b7e4d2a11',
+      });
+
+      expect(products.send).toHaveBeenLastCalledWith('products.list', {
+        page: 1,
+        pageSize: 10,
+        query: undefined,
+        activeOnly: undefined,
+        categoryId: '2f9d1c6e-6b8a-4f5d-9a3e-1c0b7e4d2a11',
+      });
+
+      await service.getMerchantStock(MERCHANT_ID, {
+        page: 1,
+        limit: 10,
+        categoryId: UNCATEGORIZED,
+      });
+
+      expect(products.send).toHaveBeenLastCalledWith('products.list', {
+        page: 1,
+        pageSize: 10,
+        query: undefined,
+        activeOnly: undefined,
+        categoryId: UNCATEGORIZED,
       });
     });
   });

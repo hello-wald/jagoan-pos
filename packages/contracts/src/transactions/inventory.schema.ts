@@ -1,10 +1,12 @@
 import { z } from 'zod';
+import { UNCATEGORIZED } from '../products/product.schema';
 
 export const getMerchantStockQuerySchema = z.object({
   search: z.string().optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(10),
   activeOnly: z.union([z.boolean(), z.stringbool()]).optional(),
+  categoryId: z.union([z.uuid(), z.literal(UNCATEGORIZED)]).optional(),
 });
 
 export type GetMerchantStockQueryInput = z.infer<typeof getMerchantStockQuerySchema>;
