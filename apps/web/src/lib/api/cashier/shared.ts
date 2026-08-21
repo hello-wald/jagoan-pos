@@ -4,7 +4,7 @@ import { buildInventoryQuery, buildTransactionsQuery } from '../query-builders';
 export type CashierCatalogQueryParams = Required<
   Pick<GetMerchantStockQueryInput, 'page' | 'limit'>
 > &
-  Pick<GetMerchantStockQueryInput, 'search'>;
+  Pick<GetMerchantStockQueryInput, 'search' | 'categoryId'>;
 
 export const cashierCatalogKeys = {
   all: ['cashier', 'catalog'] as const,
