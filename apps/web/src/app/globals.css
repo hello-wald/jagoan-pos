@@ -7,16 +7,170 @@ body {
   font-family: var(--font-sans);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-ink);
+}
+
 /* Money and any figure in a comparable column must not shift width. */
 .tabular {
   font-variant-numeric: tabular-nums;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .role-preview-float,
+  .role-frame-drift,
+  .role-panel-enter,
+  .role-chart-line,
+  .cta-mark-float {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes landing-rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes landing-reveal {
+    from {
+      opacity: 0;
+      transform: scale(1.025);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes role-preview-float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-0.08deg);
+    }
+
+    50% {
+      transform: translateY(-10px) rotate(0.12deg);
+    }
+  }
+
+  @keyframes role-frame-drift {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+
+    50% {
+      transform: translate3d(5px, -3px, 0);
+    }
+  }
+
+  @keyframes role-chart-draw {
+    from {
+      stroke-dashoffset: 740;
+    }
+
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes cta-mark-float {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(1.25deg);
+    }
+
+    50% {
+      transform: translate3d(0, -9px, 0) rotate(-1deg);
+    }
+  }
+
+  @keyframes role-badge-float-1 {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-8px) rotate(-1deg);
+    }
+  }
+
+  @keyframes role-badge-float-2 {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(7px) rotate(1.2deg);
+    }
+  }
+
+  .role-badge-float-1 {
+    animation: role-badge-float-1 5s ease-in-out infinite;
+  }
+
+  .role-badge-float-2 {
+    animation: role-badge-float-2 6s ease-in-out infinite;
+  }
+
+  .landing-copy-enter {
+    animation: landing-rise 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .landing-media-enter {
+    animation: landing-reveal 850ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .role-panel-enter {
+    animation: landing-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .role-preview-float {
+    animation: role-preview-float 6.5s ease-in-out infinite;
+    transform-origin: 55% 50%;
+    will-change: transform;
+  }
+
+  .role-frame-drift {
+    animation: role-frame-drift 8s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .role-chart-line {
+    stroke-dasharray: 740;
+    stroke-dashoffset: 740;
+    animation: role-chart-draw 1.2s 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .cta-mark-float {
+    animation: cta-mark-float 7s ease-in-out infinite;
+    transform-origin: 50% 55%;
+    will-change: transform;
   }
 }

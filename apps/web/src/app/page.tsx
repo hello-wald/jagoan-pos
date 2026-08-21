@@ -1,8 +1,5 @@
-import { redirect } from 'next/navigation';
-import { readSession } from '@/lib/auth/session';
-import { homeForRole } from '@/lib/auth/roles';
+import { LandingPage } from '@/components/landing/landing-page';
 
-export default async function RootPage() {
-  const session = await readSession();
-  redirect(session ? homeForRole(session.role) : '/login');
+export default function RootPage() {
+  return <LandingPage />;
 }

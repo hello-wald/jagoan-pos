@@ -15,7 +15,7 @@ export function homeForRole(role: UserRole): Route {
   return HOME_BY_ROLE[role];
 }
 
-export const PUBLIC_ROUTES = ['/login', '/register', '/forbidden'] as const;
+export const PUBLIC_ROUTES = ['/', '/login', '/register', '/forbidden'] as const;
 
 /**
  * Routes for slices not yet built are listed on purpose, so the protection
