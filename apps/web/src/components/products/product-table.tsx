@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { Route } from 'next';
 import { useSearchParams } from 'next/navigation';
+import { Package } from '@phosphor-icons/react';
 import type { Product } from '@jagoan-pos/contracts';
 import { formatIdr } from '@/lib/format/currency';
 import {
@@ -120,9 +121,26 @@ export function ProductTable({ params }: { params: ProductListParams }) {
                 <td className="px-4">
                   <Link
                     href={`/admin/products/${product.id}` as Route}
-                    className="font-medium text-ink underline-offset-4 hover:underline"
+                    className="flex min-w-0 items-center gap-3 font-medium text-ink underline-offset-4 hover:underline"
                   >
-                    {product.name}
+                    {product.images[0]?.url ? (
+                      <img
+                        src={product.images[0].url}
+                        alt={product.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-10 w-10 shrink-0 rounded-control border border-line bg-paper object-cover"
+                      />
+                    ) : (
+                      <span
+                        role="img"
+                        aria-label={`Tidak ada gambar untuk ${product.name}`}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-paper text-ink-2"
+                      >
+                        <Package size={18} weight="duotone" aria-hidden="true" />
+                      </span>
+                    )}
+                    <span className="truncate">{product.name}</span>
                   </Link>
                 </td>
                 <td className="px-4 font-mono text-[13px] text-ink-2">{product.sku}</td>
