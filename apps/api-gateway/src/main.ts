@@ -11,12 +11,12 @@ async function bootstrap(): Promise<void> {
 
   app.useLogger(app.get(Logger));
   app.setGlobalPrefix('api');
-  app.getHttpAdapter().getInstance().set('trust proxy', 1); 
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
   app.useGlobalFilters(new RpcExceptionFilter());
   app.enableShutdownHooks();
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Jagoan POS API')
+    .setTitle('POS Jagoan API')
     .setDescription('API Gateway documentation')
     .setVersion('1.0')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })

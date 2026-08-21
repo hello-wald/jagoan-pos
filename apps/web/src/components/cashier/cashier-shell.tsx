@@ -58,7 +58,7 @@ export function CashierShell({ children }: CashierShellProps) {
               <Storefront size={22} weight="duotone" aria-hidden />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold leading-tight tracking-tight">Jagoan POS</span>
+              <span className="text-sm font-bold leading-tight tracking-tight">POS Jagoan</span>
               <span className="text-[11px] font-medium leading-tight text-ink-3">Mode Kasir</span>
             </div>
           </Link>

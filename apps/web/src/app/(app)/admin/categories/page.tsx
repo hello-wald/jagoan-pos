@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import { CategoryTable } from '@/components/categories/category-table';
 
 export const metadata: Metadata = {
-  title: 'Kategori Produk | Jagoan POS',
-  description: 'Kelola kategori katalog global yang dipakai untuk mengelompokkan dan menyaring produk.',
+  title: 'Kategori Produk | POS Jagoan',
+  description:
+    'Kelola kategori katalog global yang dipakai untuk mengelompokkan dan menyaring produk.',
 };
 
 export default function CategoriesPage() {

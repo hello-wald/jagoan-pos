@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { InventoryView } from '@/components/owner/inventory/inventory-view';
 
 export const metadata: Metadata = {
-  title: 'Manajemen Inventori & Stok | Jagoan POS',
+  title: 'Manajemen Inventori & Stok | POS Jagoan',
   description: 'Kelola stok fisik produk, pantau stok menipis, dan lakukan penyesuaian stok toko.',
 };
 

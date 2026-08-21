@@ -1,6 +1,6 @@
 # Functional Requirements Document (FRD)
 
-**Project:** Jagoan POS — Multi-Actor POS & Business Intelligence Platform
+**Project:** POS Jagoan — Multi-Actor POS & Business Intelligence Platform
 **Case:** Scaling Without Overspending — Access-Pattern-Aware Architecture
 **Status:** Draft v0.1 · living document
 

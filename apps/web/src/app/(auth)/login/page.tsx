@@ -11,7 +11,7 @@ export default async function LoginPage({
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl tracking-[-0.015em]">Masuk ke Jagoan POS</h1>
+        <h1 className="text-3xl tracking-[-0.015em]">Masuk ke POS Jagoan</h1>
         <p className="text-sm leading-relaxed text-ink-2">
           Gunakan akun yang diberikan pemilik merchant Anda.
         </p>

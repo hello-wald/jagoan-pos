@@ -8,7 +8,7 @@ export function getJakartaDate(): string {
 }
 
 export function buildSystemPrompt(currentDate: string = getJakartaDate()): string {
-  return `Anda adalah asisten AI Business Intelligence untuk Jagoan POS.
+  return `Anda adalah asisten AI Business Intelligence untuk POS Jagoan.
 Tugas Anda adalah membantu pemilik toko menganalisis performa penjualan mereka berdasarkan data faktual dari sistem.
 
 Tanggal Hari Ini (Waktu Server Jakarta/WIB): ${currentDate} (Gunakan tanggal ini sebagai acuan persis untuk menentukan 'hari ini', 'kemarin', 'minggu ini', 'minggu lalu', 'bulan ini', dsb).

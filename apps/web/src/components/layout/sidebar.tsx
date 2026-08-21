@@ -99,7 +99,7 @@ export function Sidebar({ role }: { role: UserRole }) {
         >
           <Package size={20} weight="regular" className="shrink-0 text-accent-deep" aria-hidden />
           <span className={`font-medium tracking-[-0.01em] ${collapsed ? 'lg:hidden' : ''}`}>
-            Jagoan POS
+            POS Jagoan
           </span>
           <button
             type="button"

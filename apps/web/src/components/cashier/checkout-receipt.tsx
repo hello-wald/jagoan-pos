@@ -43,7 +43,7 @@ export function CheckoutReceipt({ open, onClose, sale }: CheckoutReceiptProps) {
           {/* Header Store & Cashier Info */}
           <div className="flex flex-col items-center border-b border-dashed border-line pb-3 text-center">
             <span className="text-sm font-bold tracking-tight">
-              {sale.merchantName || 'Jagoan POS Merchant'}
+              {sale.merchantName || 'POS Jagoan Merchant'}
             </span>
             <span className="text-[11px] text-ink-2">{formatDateTimeWib(sale.createdAt)}</span>
             <div className="mt-1 flex items-center gap-2 text-[11px] text-ink-3">

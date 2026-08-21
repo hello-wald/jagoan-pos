@@ -87,7 +87,7 @@ describe('AiService', () => {
   describe('direct conversation and out-of-scope refusals', () => {
     it('returns text directly without calling tool executor when no tools are requested', async () => {
       const llmResponse: LlmResponse = {
-        text: 'Halo! Saya AI Insight Jagoan POS. Ada yang bisa saya bantu menganalisis penjualan Anda?',
+        text: 'Halo! Saya AI Insight POS Jagoan. Ada yang bisa saya bantu menganalisis penjualan Anda?',
         functionCalls: [],
       };
       llmClientMock.generate.mockResolvedValueOnce(llmResponse);
@@ -101,7 +101,7 @@ describe('AiService', () => {
 
       expect(result).toEqual({
         answer:
-          'Halo! Saya AI Insight Jagoan POS. Ada yang bisa saya bantu menganalisis penjualan Anda?',
+          'Halo! Saya AI Insight POS Jagoan. Ada yang bisa saya bantu menganalisis penjualan Anda?',
         asOf: null,
       });
       expect(toolExecutorMock.execute).not.toHaveBeenCalled();
