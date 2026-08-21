@@ -56,7 +56,7 @@ export function StatusToggle({ id, isActive, name, onToggle }: Props) {
           if (!saving) setConfirming(false);
         }}
       >
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 text-left">
           <p className="text-sm text-ink-2">
             {name ? (
               <>
