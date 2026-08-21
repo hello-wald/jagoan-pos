@@ -7,16 +7,16 @@ import { ENV_FILE_PATH, productsEnvSchema } from './config/env.schema';
 
 async function bootstrap(): Promise<void> {
   loadEnvFile({ path: ENV_FILE_PATH });
-  const { PRODUCTS_HOST: host, PRODUCTS_TCP_PORT: port } = productsEnvSchema.parse(process.env);
+  const { PRODUCTS_TCP_PORT: port } = productsEnvSchema.parse(process.env);
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
     transport: Transport.TCP,
-    options: { host, port },
+    options: { host: '0.0.0.0', port },
     bufferLogs: true,
   });
   app.useLogger(app.get(Logger));
   app.enableShutdownHooks();
   await app.listen();
-  app.get(Logger).log(`products listening on tcp://${host}:${port}`);
+  app.get(Logger).log(`products listening on tcp://0.0.0.0:${port}`);
 }
 void bootstrap();

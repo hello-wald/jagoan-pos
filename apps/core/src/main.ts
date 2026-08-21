@@ -9,11 +9,11 @@ async function bootstrap(): Promise<void> {
   // The transport options are needed before the DI container exists, so read
   // them straight from the validated env rather than booting a throwaway app.
   loadEnvFile({ path: ENV_FILE_PATH });
-  const { CORE_HOST: host, CORE_TCP_PORT: port } = coreEnvSchema.parse(process.env);
+  const { CORE_TCP_PORT: port } = coreEnvSchema.parse(process.env);
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
     transport: Transport.TCP,
-    options: { host, port },
+    options: { host: '0.0.0.0', port },
     bufferLogs: true,
   });
 
@@ -21,7 +21,7 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks();
 
   await app.listen();
-  app.get(Logger).log(`core listening on tcp://${host}:${port}`);
+  app.get(Logger).log(`core listening on tcp://0.0.0.0:${port}`);
 }
 
 void bootstrap();

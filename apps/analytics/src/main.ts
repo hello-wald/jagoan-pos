@@ -7,17 +7,17 @@ import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
   loadEnvFile({ path: ENV_FILE_PATH });
-  const { ANALYTICS_HOST: host, ANALYTICS_TCP_PORT: port } = analyticsEnvSchema.parse(process.env);
+  const { ANALYTICS_TCP_PORT: port } = analyticsEnvSchema.parse(process.env);
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
     transport: Transport.TCP,
-    options: { host, port },
+    options: { host: '0.0.0.0', port },
     bufferLogs: true,
   });
 
   app.useLogger(app.get(Logger));
   app.enableShutdownHooks();
   await app.listen();
-  app.get(Logger).log(`analytics-service listening on tcp://${host}:${port}`);
+  app.get(Logger).log(`analytics-service listening on tcp://0.0.0.0:${port}`);
 }
 void bootstrap();
