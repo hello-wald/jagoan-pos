@@ -3,12 +3,13 @@
 import { useMemo, useState } from 'react';
 import type { MerchantStockItem, Sale } from '@jagoan-pos/contracts';
 import { AppErrorCode } from '@jagoan-pos/contracts';
-import { useCashierCatalog, useCashierCheckout } from '@/lib/api/cashier';
+import { useCashierCatalog, useCashierCategoryList, useCashierCheckout } from '@/lib/api/cashier';
 import { useDebounce } from '@/hooks/use-debounce';
 import { parseRupiahInput } from '@/lib/format/currency';
 import { messageFor } from '@/lib/i18n/messages';
 import { CheckoutReceipt } from './checkout-receipt';
 import { CatalogProductCard } from './catalog-product-card';
+import { CategoryFilterCards } from './category-filter-cards';
 import { CheckoutCartPanel, type CartItem } from './checkout-cart-panel';
 import {
   ArrowLeft,
@@ -31,6 +32,13 @@ export function CheckoutView() {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const [page, setPage] = useState(1);
+  const [categoryId, setCategoryId] = useState<string | undefined>();
+  const { data: categories = [] } = useCashierCategoryList();
+
+  const handleCategoryChange = (nextCategoryId?: string) => {
+    setCategoryId(nextCategoryId);
+    setPage(1);
+  };
 
   const {
     data: catalogData,
@@ -40,6 +48,7 @@ export function CheckoutView() {
     page,
     limit: CATALOG_PAGE_SIZE,
     search: debouncedSearch,
+    categoryId,
   });
 
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -213,39 +222,48 @@ export function CheckoutView() {
               ) : null}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label htmlFor="catalog-search" className="text-xs font-semibold text-ink">
-                Cari produk
-              </label>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <div className="group relative w-full max-w-xl">
-                  <MagnifyingGlass
-                    size={19}
-                    weight="bold"
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-3 transition-colors group-focus-within:text-accent-deep"
-                    aria-hidden
-                  />
-                  <input
-                    id="catalog-search"
-                    type="search"
-                    aria-label="Cari produk"
-                    disabled={isControlsLocked}
-                    value={search}
-                    onChange={(event) => {
-                      setSearch(event.target.value);
-                      setPage(1);
-                    }}
-                    placeholder="Nama produk atau SKU"
-                    className="h-12 w-full rounded-control border border-line bg-surface pl-11 pr-4 text-sm text-ink shadow-[0_8px_24px_rgba(23,23,26,0.04)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-ink-3 focus:border-accent-deep focus:ring-2 focus:ring-accent-deep/15 disabled:opacity-60 disabled:pointer-events-none"
-                  />
-                </div>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="catalog-search" className="text-xs font-semibold text-ink">
+                  Cari produk
+                </label>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="group relative w-full max-w-xl">
+                    <MagnifyingGlass
+                      size={19}
+                      weight="bold"
+                      className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-3 transition-colors group-focus-within:text-accent-deep"
+                      aria-hidden
+                    />
+                    <input
+                      id="catalog-search"
+                      type="search"
+                      aria-label="Cari produk"
+                      disabled={isControlsLocked}
+                      value={search}
+                      onChange={(event) => {
+                        setSearch(event.target.value);
+                        setPage(1);
+                      }}
+                      placeholder="Nama produk atau SKU"
+                      className="h-12 w-full rounded-control border border-line bg-surface pl-11 pr-4 text-sm text-ink shadow-[0_8px_24px_rgba(23,23,26,0.04)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-ink-3 focus:border-accent-deep focus:ring-2 focus:ring-accent-deep/15 disabled:opacity-60 disabled:pointer-events-none"
+                    />
+                  </div>
 
-                {catalogData ? (
-                  <span aria-live="polite" className="text-xs text-ink-3 sm:ml-auto">
-                    {catalogData.data.length} ditampilkan
-                  </span>
-                ) : null}
+                  {catalogData ? (
+                    <span aria-live="polite" className="text-xs text-ink-3 sm:ml-auto">
+                      {catalogData.data.length} ditampilkan
+                    </span>
+                  ) : null}
+                </div>
               </div>
+
+              <CategoryFilterCards
+                categories={categories}
+                value={categoryId}
+                disabled={isControlsLocked}
+                onChange={handleCategoryChange}
+              />
             </div>
           </header>
 
@@ -300,11 +318,11 @@ export function CheckoutView() {
                 <Package size={30} weight="duotone" aria-hidden />
               </div>
               <p className="text-base font-semibold text-ink">
-                {debouncedSearch ? 'Produk tidak ditemukan' : 'Katalog masih kosong'}
+                {debouncedSearch || categoryId ? 'Produk tidak ditemukan' : 'Katalog masih kosong'}
               </p>
               <p className="mt-1 max-w-[40ch] text-sm leading-relaxed text-ink-2">
-                {debouncedSearch
-                  ? `Tidak ada produk yang cocok dengan "${debouncedSearch}".`
+                {debouncedSearch || categoryId
+                  ? 'Tidak ada produk yang cocok dengan filter yang dipilih.'
                   : 'Belum ada produk aktif yang bisa dijual dari kasir ini.'}
               </p>
             </div>
