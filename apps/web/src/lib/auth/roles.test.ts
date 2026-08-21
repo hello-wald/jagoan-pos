@@ -11,6 +11,7 @@ describe('homeForRole', () => {
 
 describe('decideRoute', () => {
   it('lets anyone reach public routes', () => {
+    expect(decideRoute('/', null)).toEqual({ kind: 'allow' });
     expect(decideRoute('/login', null)).toEqual({ kind: 'allow' });
     expect(decideRoute('/register', null)).toEqual({ kind: 'allow' });
     expect(decideRoute('/forbidden', null)).toEqual({ kind: 'allow' });
