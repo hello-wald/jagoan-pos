@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - configmap.yaml
+  - clickhouse-migrate.yaml
   - api-gateway.yaml
   - core.yaml
   - products.yaml
