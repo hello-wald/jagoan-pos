@@ -60,6 +60,9 @@ jobs:
             dockerfile: apps/outbox-relay/Dockerfile
           - service: reports
             dockerfile: apps/reports/Dockerfile
+          - service: reports-migrate
+            dockerfile: apps/reports/Dockerfile
+            target: migration
     env:
       AR_HOST: ${{ vars.GCP_REGION }}-docker.pkg.dev
       AR_REPOSITORY: ${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_ARTIFACT_REPOSITORY }}
@@ -86,6 +89,7 @@ jobs:
         with:
           context: .
           file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
           push: true
           tags: |
             ${{ env.AR_HOST }}/${{ env.AR_REPOSITORY }}/${{ matrix.service }}:${{ github.sha }}
@@ -118,13 +122,6 @@ jobs:
       - run: npm run prisma:deploy --workspace=@jagoan-pos/transactions
         env:
           TRANSACTIONS_DIRECT_URL: ${{ secrets.TRANSACTIONS_DIRECT_URL }}
-      - run: npm run clickhouse:migrate --workspace=@jagoan-pos/reports
-        env:
-          CLICKHOUSE_URL: ${{ secrets.CLICKHOUSE_URL }}
-          CLICKHOUSE_DATABASE: ${{ secrets.CLICKHOUSE_DATABASE }}
-          CLICKHOUSE_USERNAME: ${{ secrets.CLICKHOUSE_USERNAME }}
-          CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
-          RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
 
   deploy:
     name: Roll out k3s on GCE
