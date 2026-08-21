@@ -109,7 +109,7 @@ export class InventoryService {
 
   async getInventorySummary(merchantId: string): Promise<InventorySummary> {
     const [catalog, allMerchantInventories] = await Promise.all([
-      this.products.send('products.list', { page: 1, pageSize: 1}),
+      this.products.send('products.list', { page: 1, pageSize: 1 }),
       this.prisma.inventory.findMany({
         where: { merchantId },
         select: { stockQuantity: true },
@@ -153,6 +153,7 @@ export class InventoryService {
       pageSize: limit,
       query: query.search,
       activeOnly: query.activeOnly,
+      ...(query.categoryId === undefined ? {} : { categoryId: query.categoryId }),
     });
 
     const productIds = catalog.data.map((p) => p.id);
