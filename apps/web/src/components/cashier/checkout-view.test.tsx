@@ -95,6 +95,12 @@ describe('CheckoutView Component', () => {
       error: null,
     } as unknown as ReturnType<typeof cashierApi.useCashierCatalog>);
 
+    vi.spyOn(cashierApi, 'useCashierCategoryList').mockReturnValue({
+      data: [{ id: 'cat-1', name: 'Minuman' }],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof cashierApi.useCashierCategoryList>);
+
     vi.spyOn(cashierApi, 'useCashierCheckout').mockReturnValue({
       mutateAsync: mutateAsyncMock,
       isPending: false,
@@ -377,5 +383,22 @@ describe('CheckoutView Component', () => {
 
     const searchInput = screen.getByRole('searchbox', { name: 'Cari produk' });
     expect(searchInput).toBeDisabled();
+  });
+
+  it('filters by category and forwards categoryId to the catalog hook', async () => {
+    const user = userEvent.setup();
+    const useCashierCatalogSpy = vi.spyOn(cashierApi, 'useCashierCatalog').mockReturnValue({
+      data: mockCatalog,
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof cashierApi.useCashierCatalog>);
+
+    render(<CheckoutView />, { wrapper: createWrapper() });
+
+    await user.click(screen.getByRole('button', { name: 'Minuman' }));
+
+    expect(useCashierCatalogSpy).toHaveBeenLastCalledWith(
+      expect.objectContaining({ categoryId: 'cat-1', page: 1 }),
+    );
   });
 });
